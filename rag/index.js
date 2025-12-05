@@ -68,6 +68,10 @@ export { retrieveWorldContext } from './integration/rag-retriever.js';
 // ===== 提示注入API =====
 export { injectRagPrompts } from './integration/prompt-injector.js';
 
+// ===== 独立RAG API =====
+export { performIndependentRagRetrieval } from './integration/independent-rag-retriever.js';
+export { injectIndependentRag, summarizeIndependentRagPrompt, validateIndependentRagPrompt } from './integration/independent-rag-injector.js';
+
 // ===== UI相关API =====
 export { openLoreManager } from './ui/lore-manager.js';
 export { openDocumentEditor } from './ui/document-editor.js';

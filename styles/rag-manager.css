@@ -1,0 +1,102 @@
+/* ===========================
+ * 世界观设定管理器两列布局
+ * =========================== */
+
+/* 两列布局容器 */
+.ce-lore-manager-layout {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  width: 100%;
+}
+
+/* 左列：向量化配置、分块策略、集合管理 */
+.ce-lore-manager-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 右列：检索相关配置 */
+.ce-lore-manager-right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===========================
+ * 独立恒定RAG配置折叠样式
+ * =========================== */
+
+/* 独立恒定RAG配置区域 - 增强视觉效果 */
+#ce-independent-rag-section {
+  transition: opacity 0.2s ease, max-height 0.3s ease;
+  border: 2px solid var(--SmartThemeAccentColor, #3fa9f5);
+  background: rgba(63, 169, 245, 0.08);
+  box-shadow: 0 2px 8px rgba(63, 169, 245, 0.2);
+}
+
+#ce-independent-rag-section[style*="display: none"] {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+}
+
+#ce-independent-rag-section[style*="display: block"] {
+  opacity: 1;
+  max-height: 2000px;
+}
+
+/* 独立恒定RAG标题区域 - 增强视觉效果 */
+.ce-lore-manager-right > .ce-section-header:first-child {
+  background: linear-gradient(135deg, rgba(63, 169, 245, 0.15), rgba(63, 169, 245, 0.05));
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(63, 169, 245, 0.3);
+  box-shadow: 0 2px 6px rgba(63, 169, 245, 0.15);
+}
+
+.ce-lore-manager-right > .ce-section-header:first-child span {
+  color: var(--SmartThemeAccentColor, #3fa9f5);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* 折叠按钮样式优化 */
+[data-action="toggle-independent-rag"] {
+  min-width: auto;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(63, 169, 245, 0.15);
+  border: 1px solid rgba(63, 169, 245, 0.3);
+  transition: all 0.2s ease;
+}
+
+[data-action="toggle-independent-rag"]:hover {
+  background: rgba(63, 169, 245, 0.25);
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+}
+
+[data-action="toggle-independent-rag"] .ce-collapsible-toggle {
+  font-size: 0.9rem;
+  transition: transform 0.2s ease;
+  display: inline-block;
+  color: var(--SmartThemeAccentColor, #3fa9f5);
+}
+
+/* 混合检索配置区域 - 恢复深色半透明外框填充底色 */
+.ce-hybrid-search-wrapper {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  border: 1px solid var(--SmartThemeBorderColor, #444);
+}
+
+.ce-hybrid-search-wrapper .ce-section-header {
+  margin-bottom: 10px;
+}

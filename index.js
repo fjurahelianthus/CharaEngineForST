@@ -18,6 +18,7 @@ extension_settings[EXT_ID] = extension_settings[EXT_ID] || {
   useEarlyParse: true,
   useSceneAndCast: true,  // 强制启用，核心功能
   useWorldRag: false,
+  useIndependentRag: false,  // 独立RAG全局开关
   parseStreaming: true  // 强制启用，核心功能
 };
 
@@ -84,6 +85,7 @@ function wireSettingsForm(container) {
   const enableCheckbox = container.querySelector("#ce_enabled");
   const earlyParseCheckbox = container.querySelector("#ce_use_early_parse");
   const worldRagCheckbox = container.querySelector("#ce_use_world_rag");
+  const independentRagCheckbox = container.querySelector("#ce_use_independent_rag");
   const openEditorBtn = container.querySelector("#ce_open_editor");
   const openStateObserverBtn = container.querySelector("#ce_open_state_observer");
 
@@ -115,6 +117,20 @@ function wireSettingsForm(container) {
       
       // 如果从未启用变为启用，尝试初始化
       if (!wasEnabled && settings.useWorldRag && !ragSystem) {
+        await initializeRagIfEnabled();
+      }
+    });
+  }
+
+  if (independentRagCheckbox) {
+    independentRagCheckbox.checked = !!settings.useIndependentRag;
+    independentRagCheckbox.addEventListener("change", async () => {
+      const wasEnabled = settings.useIndependentRag;
+      settings.useIndependentRag = independentRagCheckbox.checked;
+      saveSettingsDebounced();
+      
+      // 如果从未启用变为启用，尝试初始化RAG系统
+      if (!wasEnabled && settings.useIndependentRag && !ragSystem) {
         await initializeRagIfEnabled();
       }
     });

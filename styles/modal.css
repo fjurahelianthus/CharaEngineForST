@@ -1,0 +1,341 @@
+/* ===========================
+ * 角色引擎：模态框样式
+ * =========================== */
+
+.ce-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999; /* 提高到最上层，高于所有其他元素 */
+  background: rgba(0, 0, 0, 0.5); /* 编辑器使用半透明背景遮罩 */
+  display: none;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+/* 观察器专用：侧边栏模式的背景保持穿透 */
+.ce-modal-backdrop[data-ce-state-observer-root] {
+  background: transparent;
+  pointer-events: none;
+}
+
+.ce-modal-backdrop-sidebar {
+  pointer-events: none;
+}
+
+.ce-modal {
+  position: relative; /* 编辑器使用相对定位，配合 backdrop 的 flex 居中 */
+  width: min(960px, 96vw);
+  max-height: 90vh;
+  background: var(--SmartThemeBlurTintColor, #202020);
+  border-radius: 10px;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: auto; /* 弹窗本身可交互 */
+  color: var(--SmartThemeBodyColor); /* 使用ST主题颜色 */
+}
+
+/* 观察器专用：默认半透明效果 */
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal:hover {
+  opacity: 1;
+}
+
+/* 大尺寸模态框（用于状态观察器） */
+.ce-modal-large {
+  width: min(1200px, 98vw);
+  max-height: 95vh;
+}
+
+/* 小尺寸模态框（用于进度提示等） */
+.ce-modal-small {
+  width: min(500px, 90vw);
+  max-height: 70vh;
+}
+
+/* 观察器专用：可拖动模态框 */
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-draggable {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  resize: both; /* 允许浏览器原生缩放（备用） */
+}
+
+/* 观察器专用：侧边栏模式 - 参考 variables-panel 的设计，改为左侧显示 */
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0; /* 改为左侧 */
+  bottom: 0;
+  right: auto;
+  width: calc((100vw - var(--sheldWidth)) / 2) !important; /* 响应式宽度 */
+  max-width: 80vw;
+  min-width: 400px; /* 最小宽度保证可用性 */
+  height: 100vh !important;
+  max-height: 100vh !important;
+  border-radius: 0;
+  border-left: none; /* 左侧无边框 */
+  border-right: 1px solid var(--SmartThemeBorderColor); /* 右侧边框 */
+  transform: none !important;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.5); /* 右侧阴影 */
+}
+
+/* 编辑器专用：右侧边栏模式 */
+.ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0; /* 右侧显示 */
+  bottom: 0;
+  left: auto;
+  width: calc((100vw - var(--sheldWidth)) / 2) !important; /* 响应式宽度 */
+  max-width: 80vw;
+  min-width: 400px; /* 最小宽度保证可用性 */
+  height: 100vh !important;
+  max-height: 100vh !important;
+  border-radius: 0;
+  border-right: none; /* 右侧无边框 */
+  border-left: 1px solid var(--SmartThemeBorderColor); /* 左侧边框 */
+  transform: none !important;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.5); /* 左侧阴影 */
+}
+
+/* 编辑器侧边栏模式：背景穿透 */
+.ce-modal-backdrop[data-ce-editor-root].ce-modal-backdrop-sidebar {
+  background: transparent;
+  pointer-events: none;
+}
+
+.ce-modal-backdrop[data-ce-editor-root].ce-modal-backdrop-sidebar .ce-modal {
+  pointer-events: auto;
+}
+
+/* 未选择角色卡时的错误高亮样式 */
+.ce-modal.ce-modal-error {
+  border-color: #e74c3c;
+  box-shadow: 0 0 22px rgba(231, 76, 60, 0.8);
+}
+
+/* 未选择角色卡时的锁定遮罩层 */
+.ce-modal-locked-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  background: rgba(0, 0, 0, 0.78);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+/* 锁定提示内容盒子 */
+.ce-locked-box {
+  max-width: 520px;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #e74c3c;
+  background: rgba(30, 0, 0, 0.95);
+  box-shadow: 0 0 18px rgba(231, 76, 60, 0.7);
+  padding: 16px 18px;
+  text-align: center;
+}
+
+.ce-locked-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffdddd;
+  margin-bottom: 8px;
+}
+
+.ce-locked-message {
+  font-size: 0.9rem;
+  color: #ffd7d7;
+  margin-bottom: 6px;
+}
+
+.ce-locked-hint {
+  font-size: 0.8rem;
+  color: #ffaaaa;
+}
+
+.ce-modal-header {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px; /* 参考 variables-panel 的 padding */
+  border-bottom: 0.5px solid var(--SmartThemeBorderColor, #444); /* 更细的边框 */
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* 观察器专用：可拖动的标题栏 */
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-draggable-handle {
+  cursor: move;
+  user-select: none;
+}
+
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-draggable-handle {
+  cursor: default; /* 侧边栏模式不可拖动 */
+}
+
+.ce-modal-title {
+  font-weight: bold; /* 参考 variables-panel */
+  font-size: 16px; /* 参考 variables-panel */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 观察器专用：拖动指示器 */
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-drag-indicator {
+  font-size: 0.9rem;
+  color: #666;
+  letter-spacing: -2px;
+}
+
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-drag-indicator {
+  display: none; /* 侧边栏模式隐藏拖动指示器 */
+}
+
+/* 标题栏操作按钮组 */
+.ce-modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ce-modal-action-btn {
+  border: none;
+  background: transparent;
+  color: var(--SmartThemeBodyColor, #e9e9e9);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.ce-modal-action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ce-sidebar-icon {
+  display: inline-block;
+  font-size: 1.1rem;
+}
+
+.ce-modal-close {
+  border: none;
+  background: transparent;
+  color: var(--SmartThemeBodyColor, #e9e9e9);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.ce-modal-close:hover {
+  background: rgba(255, 100, 100, 0.2);
+  color: #ff6666;
+}
+
+.ce-modal-body {
+  padding: 10px; /* 参考 variables-panel 的 list padding */
+  overflow-y: auto; /* 明确垂直滚动 */
+  flex: 1;
+}
+
+/* 滚动条样式 - 参考 variables-panel */
+.ce-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ce-modal-body::-webkit-scrollbar-track {
+  background: var(--SmartThemeBodyColor);
+}
+
+.ce-modal-body::-webkit-scrollbar-thumb {
+  background: var(--SmartThemeBorderColor);
+  border-radius: 3px;
+}
+
+.ce-modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--SmartThemeQuoteColor);
+}
+
+.ce-modal-footer {
+  padding: 8px 10px;
+  border-top: 1px solid var(--SmartThemeBorderColor, #333);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ===========================
+ * 缩放手柄样式
+ * =========================== */
+
+.ce-resize-handle {
+  position: absolute;
+  background: transparent;
+  z-index: 10;
+}
+
+.ce-resize-handle-se {
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+}
+
+.ce-resize-handle-e {
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 60%;
+  cursor: ew-resize;
+}
+
+.ce-resize-handle-s {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 8px;
+  cursor: ns-resize;
+}
+
+/* 观察器专用：侧边栏模式隐藏缩放手柄 */
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-resize-handle {
+  display: none;
+}
+
+/* 缩放手柄悬停效果 */
+.ce-resize-handle:hover {
+  background: rgba(63, 169, 245, 0.3);
+}
+
+.ce-resize-handle-se:hover::after {
+  content: "⋰";
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  font-size: 12px;
+  color: var(--SmartThemeAccentColor, #3fa9f5);
+}

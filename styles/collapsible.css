@@ -1,0 +1,157 @@
+/* ===========================
+ * 折叠卡片列表样式
+ * =========================== */
+
+/* 折叠卡片容器 */
+.ce-parameters-container,
+.ce-prompt-types-container,
+.ce-entities-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 折叠卡片 */
+.ce-collapsible-card {
+  border: 1px solid var(--SmartThemeBorderColor, #444);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.ce-collapsible-card:hover {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+}
+
+/* 折叠卡片头部 */
+.ce-collapsible-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid transparent;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ce-collapsible-card-header:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* 拖拽手柄 */
+.ce-drag-handle {
+  color: #666;
+  cursor: move;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.ce-drag-handle:hover {
+  color: var(--SmartThemeAccentColor, #3fa9f5);
+}
+
+/* 折叠按钮 */
+.ce-collapsible-toggle {
+  color: var(--SmartThemeAccentColor, #3fa9f5);
+  font-size: 1rem;
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+
+.ce-collapsible-toggle:hover {
+  color: var(--SmartThemeEmColor, #5bc0de);
+}
+
+/* 折叠卡片内容 */
+.ce-collapsible-card-content {
+  padding: 10px;
+  border-top: 1px solid var(--SmartThemeBorderColor, #444);
+}
+
+/* 头部内容区域 */
+.ce-collapsible-header-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 标题 */
+.ce-collapsible-title {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--SmartThemeBodyColor, #eee);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 徽章 */
+.ce-collapsible-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  background: rgba(63, 169, 245, 0.2);
+  color: var(--SmartThemeAccentColor, #3fa9f5);
+  border: 1px solid rgba(63, 169, 245, 0.3);
+  white-space: nowrap;
+}
+
+/* 主体内容区域 */
+.ce-collapsible-body-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 拖拽状态 */
+.ce-dragging {
+  opacity: 0.5;
+  cursor: move;
+}
+
+.ce-drag-over {
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+  box-shadow: 0 0 8px rgba(63, 169, 245, 0.5);
+  background: rgba(63, 169, 245, 0.1);
+}
+
+/* 实体面板特殊样式 */
+.ce-entity-cast-section {
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* ===========================
+ * 提示条目面板特殊样式
+ * =========================== */
+
+.ce-prompts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ce-collapsible-hint {
+  font-size: 0.75rem;
+  color: #888;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ce-conditions-error-list {
+  margin-top: 4px;
+}

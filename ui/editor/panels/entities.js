@@ -163,6 +163,17 @@ export function renderEntities(root, entities) {
     }
 
     container.appendChild(card);
+    
+    // 如果是地点类型，填充父地点下拉菜单
+    if (type === "location") {
+      const parentSelect = /** @type {HTMLSelectElement|null} */ (card.querySelector('[data-ce-field="parentLocation"]'));
+      if (parentSelect) {
+        // 延迟填充，确保所有卡片都已添加到DOM
+        setTimeout(() => {
+          populateParentLocationSelect(parentSelect, card, e.parentLocation || "");
+        }, 0);
+      }
+    }
   });
 }
 
@@ -174,7 +185,7 @@ export function renderEntities(root, entities) {
  * @returns {string}
  */
 function buildEntityBodyContent(e, type, isUserEntity = false) {
-  const childrenStr = Array.isArray(e.childrenNames) ? e.childrenNames.join(",") : "";
+  const parentLocation = e.parentLocation || "";
   const locationsStr = Array.isArray(e.locations) ? e.locations.join(",") : "";
   const charactersStr = Array.isArray(e.characters) ? e.characters.join(",") : "";
   
@@ -204,8 +215,10 @@ function buildEntityBodyContent(e, type, isUserEntity = false) {
     relationsHtml = `
       <div class="ce-form-row-horizontal">
         <label>
-          <span class="ce-form-label">子地点：</span>
-          <input type="text" data-ce-field="childrenNames" value="${escapeHtml(childrenStr)}" placeholder="例如：爱知学院.3年E班" />
+          <span class="ce-form-label">父地点：</span>
+          <select data-ce-field="parentLocation" data-ce-dynamic-select="location-parent">
+            <option value="">（无父地点）</option>
+          </select>
         </label>
       </div>
       <div class="ce-form-row-horizontal">
@@ -368,8 +381,8 @@ export function collectEntities(root) {
         .filter(Boolean);
     };
 
-    /** @type {string[]} */
-    let childrenNames = [];
+    /** @type {string} */
+    let parentLocation = "";
     /** @type {string[]} */
     let locations = [];
     /** @type {string[]} */
@@ -381,9 +394,9 @@ export function collectEntities(root) {
       const locationsEl = getInput("locations");
       locations = parseList(locationsEl);
     } else if (type === "location") {
-      const childrenEl = getInput("childrenNames");
+      const parentEl = /** @type {HTMLSelectElement|null} */ (card.querySelector('[data-ce-field="parentLocation"]'));
       const charactersEl = getInput("characters");
-      childrenNames = parseList(childrenEl);
+      parentLocation = parentEl?.value || "";
       characters = parseList(charactersEl);
     }
 
@@ -413,7 +426,7 @@ export function collectEntities(root) {
       id: idEl?.value.trim() || "",
       type,
       baseinfo: baseinfoEl?.value || "",
-      childrenNames,
+      parentLocation,
       locations,
       characters,
       parameterNames,
@@ -503,6 +516,11 @@ function onEntityPanelClick(ev) {
       
       if (card.parentElement) {
         card.parentElement.removeChild(card);
+        
+        // 删除实体后，刷新所有地点实体的父地点下拉菜单
+        setTimeout(() => {
+          refreshAllParentLocationSelects(panel);
+        }, 100);
       }
     }
   } else if (action === "toggle-collapse") {
@@ -565,11 +583,13 @@ function onEntityPanelChange(ev) {
     const input = card.querySelector(`[data-ce-field="${field}"]`);
     if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
       return String(input.value || "");
+    } else if (input instanceof HTMLSelectElement) {
+      return String(input.value || "");
     }
     return "";
   };
 
-  const childrenStr = getCurrentValue("childrenNames");
+  const parentLocation = getCurrentValue("parentLocation");
   const locationsStr = getCurrentValue("locations");
   const charactersStr = getCurrentValue("characters");
 
@@ -588,8 +608,10 @@ function onEntityPanelChange(ev) {
     relationsHtml = `
       <div class="ce-form-row-horizontal">
         <label>
-          <span class="ce-form-label">子地点：</span>
-          <input type="text" data-ce-field="childrenNames" value="${escapeHtml(childrenStr)}" placeholder="例如：爱知学院.3年E班" />
+          <span class="ce-form-label">父地点：</span>
+          <select data-ce-field="parentLocation" data-ce-dynamic-select="location-parent">
+            <option value="">（无父地点）</option>
+          </select>
         </label>
       </div>
       <div class="ce-form-row-horizontal">
@@ -608,6 +630,22 @@ function onEntityPanelChange(ev) {
   }
 
   relationsField.innerHTML = relationsHtml;
+  
+  // 如果是地点类型，需要重新填充父地点下拉菜单
+  if (newType === "location") {
+    const parentSelect = /** @type {HTMLSelectElement|null} */ (relationsField.querySelector('[data-ce-field="parentLocation"]'));
+    if (parentSelect) {
+      populateParentLocationSelect(parentSelect, card, parentLocation);
+    }
+  }
+  
+  // 当类型变更为地点或从地点变更时，更新所有地点实体的父地点下拉菜单
+  const panel = card.closest('[data-tab-panel="entities"]');
+  if (panel) {
+    setTimeout(() => {
+      refreshAllParentLocationSelects(panel);
+    }, 100);
+  }
 
   // 更新 Cast 分层字段
   if (castLayersField) {
@@ -664,6 +702,18 @@ function onEntityPanelInput(ev) {
     if (titleSpan) {
       const newName = target.value.trim();
       titleSpan.textContent = newName || "（未命名）";
+    }
+    
+    // 当地点实体的名称变化时，更新所有其他地点实体的父地点下拉菜单
+    const typeSelect = card.querySelector('[data-ce-field="type"]');
+    if (typeSelect instanceof HTMLSelectElement && typeSelect.value === "location") {
+      const panel = card.closest('[data-tab-panel="entities"]');
+      if (panel) {
+        // 延迟更新，确保当前输入已完成
+        setTimeout(() => {
+          refreshAllParentLocationSelects(panel);
+        }, 100);
+      }
     }
   }
 }
@@ -890,6 +940,11 @@ function addEmptyEntityRow(panel) {
   });
 
   container.appendChild(card);
+  
+  // 新增实体后，刷新所有地点实体的父地点下拉菜单
+  setTimeout(() => {
+    refreshAllParentLocationSelects(panel);
+  }, 100);
 }
 
 /**
@@ -924,7 +979,7 @@ function copyEntity(panel, sourceCard) {
   const type = getFieldValue("type") || "character";
   const id = getFieldValue("id");
   const baseinfo = getFieldValue("baseinfo");
-  const childrenNames = getFieldValue("childrenNames");
+  const parentLocation = getFieldValue("parentLocation");
   const locations = getFieldValue("locations");
   const characters = getFieldValue("characters");
   const parameterNames = getFieldValue("parameterNames");
@@ -969,8 +1024,10 @@ function copyEntity(panel, sourceCard) {
     relationsHtml = `
       <div class="ce-form-row-horizontal">
         <label>
-          <span class="ce-form-label">子地点：</span>
-          <input type="text" data-ce-field="childrenNames" value="${escapeHtml(childrenNames)}" placeholder="例如：爱知学院.3年E班" />
+          <span class="ce-form-label">父地点：</span>
+          <select data-ce-field="parentLocation" data-ce-dynamic-select="location-parent">
+            <option value="">（无父地点）</option>
+          </select>
         </label>
       </div>
       <div class="ce-form-row-horizontal">
@@ -1083,6 +1140,11 @@ function copyEntity(panel, sourceCard) {
     container.appendChild(card);
   }
 
+  // 复制实体后，刷新所有地点实体的父地点下拉菜单
+  setTimeout(() => {
+    refreshAllParentLocationSelects(panel);
+  }, 100);
+
   // 滚动到新卡片
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -1101,4 +1163,87 @@ export function getCollapsedSet() {
  */
 export function setCollapsedSet(set) {
   collapsedSet = set;
+}
+
+/**
+ * 填充父地点下拉菜单选项
+ * @param {HTMLSelectElement} selectElement - 下拉菜单元素
+ * @param {HTMLElement} currentCard - 当前实体卡片
+ * @param {string} currentValue - 当前选中的父地点值
+ */
+function populateParentLocationSelect(selectElement, currentCard, currentValue = "") {
+  if (!selectElement) return;
+  
+  // 获取当前实体的名称（用于排除自己）
+  const currentNameInput = currentCard.querySelector('[data-ce-field="name"]');
+  const currentName = currentNameInput instanceof HTMLInputElement ? currentNameInput.value.trim() : "";
+  
+  // 获取所有地点类型的实体
+  const panel = currentCard.closest('[data-tab-panel="entities"]');
+  if (!panel) return;
+  
+  const container = panel.querySelector('[data-ce-container="entities"]');
+  if (!container) return;
+  
+  const cards = container.querySelectorAll('.ce-collapsible-card');
+  const locationOptions = [];
+  
+  cards.forEach((card) => {
+    const nameInput = card.querySelector('[data-ce-field="name"]');
+    const typeSelect = card.querySelector('[data-ce-field="type"]');
+    
+    if (nameInput instanceof HTMLInputElement && typeSelect instanceof HTMLSelectElement) {
+      const name = nameInput.value.trim();
+      const type = typeSelect.value;
+      
+      // 只添加地点类型的实体，且排除当前实体自己
+      if (type === "location" && name && name !== currentName) {
+        locationOptions.push(name);
+      }
+    }
+  });
+  
+  // 保存当前选中的值（如果没有传入currentValue）
+  if (!currentValue) {
+    currentValue = selectElement.value;
+  }
+  
+  // 清空现有选项（保留"无父地点"选项）
+  selectElement.innerHTML = '<option value="">（无父地点）</option>';
+  
+  // 添加所有地点选项
+  locationOptions.forEach((name) => {
+    const option = document.createElement('option');
+    option.value = name;
+    option.textContent = name;
+    if (name === currentValue) {
+      option.selected = true;
+    }
+    selectElement.appendChild(option);
+  });
+}
+
+/**
+ * 刷新所有地点实体的父地点下拉菜单
+ * @param {HTMLElement} panel - 实体面板
+ */
+function refreshAllParentLocationSelects(panel) {
+  if (!panel) return;
+  
+  const container = panel.querySelector('[data-ce-container="entities"]');
+  if (!container) return;
+  
+  const cards = container.querySelectorAll('.ce-collapsible-card');
+  
+  cards.forEach((card) => {
+    const typeSelect = card.querySelector('[data-ce-field="type"]');
+    if (typeSelect instanceof HTMLSelectElement && typeSelect.value === "location") {
+      const parentSelect = /** @type {HTMLSelectElement|null} */ (card.querySelector('[data-ce-field="parentLocation"]'));
+      if (parentSelect) {
+        // 保存当前选中的值
+        const currentValue = parentSelect.value;
+        populateParentLocationSelect(parentSelect, card, currentValue);
+      }
+    }
+  });
 }

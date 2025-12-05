@@ -156,6 +156,84 @@ function parseCastIntentBlock(castBlock) {
 }
 
 /**
+ * 从 <LocationCastIntent> 块中解析地点Cast变更意图
+ * @param {string} locationCastBlock - LocationCastIntent 块内容
+ * @returns {Object}
+ */
+function parseLocationCastIntentBlock(locationCastBlock) {
+  const locationCastIntent = {};
+  
+  // 提取 <setCurrent> 块
+  const setCurrentMatch = locationCastBlock.match(/<setCurrent>([\s\S]*?)<\/setCurrent>/i);
+  if (setCurrentMatch) {
+    const content = setCurrentMatch[1].trim();
+    // 支持两种格式：
+    // 1. 直接文本：学园屋顶
+    // 2. 带标记：- 地点：学园屋顶
+    const locationMatch = content.match(/(?:地点[：:]\s*)?([^\n（(]+)/);
+    if (locationMatch) {
+      locationCastIntent.setCurrent = locationMatch[1].trim();
+    }
+  }
+  
+  // 提取 <addCandidate> 块
+  const addCandidateMatch = locationCastBlock.match(/<addCandidate>([\s\S]*?)<\/addCandidate>/i);
+  if (addCandidateMatch) {
+    locationCastIntent.addCandidate = parseLocationNames(addCandidateMatch[1]);
+  }
+  
+  // 提取 <removeCandidate> 块
+  const removeCandidateMatch = locationCastBlock.match(/<removeCandidate>([\s\S]*?)<\/removeCandidate>/i);
+  if (removeCandidateMatch) {
+    locationCastIntent.removeCandidate = parseLocationNames(removeCandidateMatch[1]);
+  }
+  
+  return locationCastIntent;
+}
+
+/**
+ * 解析地点名称列表（支持多种格式）
+ * @param {string} text - 包含地点名称的文本
+ * @returns {string[]}
+ */
+function parseLocationNames(text) {
+  if (!text) return [];
+  const names = [];
+  const lines = text.split('\n');
+  
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('#')) {
+      continue;
+    }
+    
+    // 支持多种格式：
+    // - 地点：学园屋顶
+    // - 学园屋顶
+    // 学园屋顶
+    let locationName = null;
+    
+    if (trimmed.startsWith('-')) {
+      const match = trimmed.match(/地点[：:]\s*([^\n（(]+)/);
+      if (match) {
+        locationName = match[1].trim();
+      } else {
+        // 简单格式：- 学园屋顶
+        locationName = trimmed.substring(1).trim();
+      }
+    } else {
+      locationName = trimmed;
+    }
+    
+    if (locationName) {
+      names.push(locationName);
+    }
+  }
+  
+  return names;
+}
+
+/**
  * 从 <SceneMeta> 块中解析场景元数据
  * @param {string} sceneMetaBlock - SceneMeta 块内容
  * @returns {Object}
@@ -233,6 +311,11 @@ function parseFromXmlBlocks(text) {
     const castIntentBlock = extractXmlBlock(updateSceneBlock, 'CastIntent');
     if (castIntentBlock) {
       sceneDelta.castIntent = parseCastIntentBlock(castIntentBlock);
+    }
+    
+    const locationCastIntentBlock = extractXmlBlock(updateSceneBlock, 'LocationCastIntent');
+    if (locationCastIntentBlock) {
+      sceneDelta.locationCastIntent = parseLocationCastIntentBlock(locationCastIntentBlock);
     }
     
     const sceneMetaBlock = extractXmlBlock(updateSceneBlock, 'SceneMeta');

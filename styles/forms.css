@@ -1,0 +1,482 @@
+/* ===========================
+ * 表单和表格样式
+ * =========================== */
+
+/* 表格样式 */
+.ce-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.ce-table th,
+.ce-table td {
+  border: 1px solid var(--SmartThemeBorderColor, #444);
+  padding: 4px 6px;
+  vertical-align: top;
+}
+
+/* 实体编辑表格：列宽微调
+ * - 第 2 列（类型）适当加宽；
+ * - 第 3 列（内部ID）变窄，避免占用过多空间。 */
+.ce-table[data-ce-table="entities"] th:nth-child(2),
+.ce-table[data-ce-table="entities"] td:nth-child(2) {
+  width: 120px;
+  white-space: nowrap;
+}
+
+.ce-table[data-ce-table="entities"] th:nth-child(3),
+.ce-table[data-ce-table="entities"] td:nth-child(3) {
+  width: 110px;
+  white-space: nowrap;
+}
+
+/* 实体编辑表格：结构与关联区域
+ * - label 与输入框同一行展示；
+ * - 输入框占据剩余空间。 */
+.ce-entity-relations {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ce-entity-relations label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.ce-entity-relations label input[type="text"] {
+  flex: 1 1 auto;
+  width: auto;
+}
+
+.ce-entity-relations-disabled {
+  opacity: 0.8;
+}
+
+.ce-table th {
+  background: rgba(0, 0, 0, 0.35);
+  font-weight: 500;
+}
+
+.ce-table input[type="text"],
+.ce-table input[type="number"],
+.ce-table select,
+.ce-table textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+}
+
+/* 条件格式错误时的红框高亮 */
+.ce-table textarea.ce-input-error {
+  border-color: #e74c3c;
+  box-shadow: 0 0 4px rgba(231, 76, 60, 0.7);
+}
+
+/* 占位符颜色，避免在深色背景下太浅看不清 */
+.ce-table input[type="text"]::placeholder,
+.ce-table input[type="number"]::placeholder,
+.ce-table textarea::placeholder {
+  color: #aaaaaa;
+}
+
+/* 紧凑表格样式（用于时间线视图） */
+.ce-table-compact {
+  font-size: 0.8rem;
+}
+
+.ce-table-compact th,
+.ce-table-compact td {
+  padding: 3px 5px;
+}
+
+/* 提示条目面板工具条 */
+.ce-prompts-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.ce-prompts-toolbar input[type="text"] {
+  width: 180px;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+}
+
+/* 提示条目筛选输入框占位符颜色 */
+.ce-prompts-toolbar input[type="text"]::placeholder {
+  color: #aaaaaa;
+}
+
+/* 提示条目主行：拖拽 + 折叠样式 */
+.ce-prompt-toggle-cell {
+  width: 24px;
+  text-align: center;
+  vertical-align: top;
+}
+
+.ce-prompt-toggle {
+  padding: 0 4px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* 主行支持拖拽时的鼠标样式 */
+.ce-table tr[data-ce-prompt-row="main"] {
+  cursor: move;
+}
+
+/* 拖拽目标高亮 */
+.ce-table tr.ce-prompt-row-drop-target {
+  outline: 2px dashed var(--SmartThemeAccentColor, #3fa9f5);
+  background-color: rgba(63, 169, 245, 0.12);
+}
+
+/* 详细/紧凑视图切换 */
+.ce-prompt-full {
+  display: block;
+}
+
+.ce-prompt-compact {
+  display: none;
+  gap: 4px;
+  align-items: center;
+}
+
+/* 折叠状态：隐藏详细区域，仅显示紧凑单行 */
+.ce-table tr.ce-prompt-row-collapsed .ce-prompt-full {
+  display: none;
+}
+
+.ce-table tr.ce-prompt-row-collapsed .ce-prompt-compact {
+  display: flex;
+}
+
+/* 紧凑视图中的单行文本框：不可拉高，超出省略 */
+.ce-prompt-compact input[type="text"] {
+  width: 100%;
+  resize: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 角色选项布局 */
+.ce-form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ce-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ce-checkbox-row input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+/* 参数编辑器：数值范围 / 枚举 输入区域样式 */
+.ce-range-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ce-input-number-small {
+  max-width: 70px;
+  width: 70px;
+  box-sizing: border-box;
+}
+
+/* 分隔符视觉弱化，避免抢占注意力 */
+.ce-range-sep {
+  padding: 0 2px;
+  color: #888;
+  font-size: 0.85em;
+}
+
+/* 布尔型参数的固定提示文案 */
+.ce-param-boolean-hint {
+  font-size: 0.85em;
+  color: #888;
+}
+
+/* 表单行 */
+.ce-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ce-form-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.ce-form-label {
+  font-weight: 500;
+  color: var(--SmartThemeEmColor, #ddd);
+  font-size: 0.85rem;
+}
+
+/* 横向表单行 - 标签和输入框在同一行 */
+.ce-form-row-horizontal {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.ce-form-row-horizontal label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ce-form-row-horizontal .ce-form-label {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ce-form-row-horizontal input[type="text"],
+.ce-form-row-horizontal input[type="number"],
+.ce-form-row-horizontal select {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  padding: 4px 6px;
+  border-radius: 3px;
+}
+
+.ce-form-row-horizontal input[type="text"]:focus,
+.ce-form-row-horizontal input[type="number"]:focus,
+.ce-form-row-horizontal select:focus {
+  outline: none;
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+  box-shadow: 0 0 0 2px rgba(63, 169, 245, 0.2);
+}
+
+/* 多列布局 - 用于将多个字段放在同一行 */
+.ce-form-row-multi {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ce-form-row-multi > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.ce-form-row-multi label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.ce-form-row-multi .ce-form-label {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ce-form-row-multi input[type="text"],
+.ce-form-row-multi input[type="number"],
+.ce-form-row-multi select {
+  flex: 1;
+  min-width: 60px;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  padding: 4px 6px;
+  border-radius: 3px;
+}
+
+.ce-form-row-multi input[type="text"]:focus,
+.ce-form-row-multi input[type="number"]:focus,
+.ce-form-row-multi select:focus {
+  outline: none;
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+  box-shadow: 0 0 0 2px rgba(63, 169, 245, 0.2);
+}
+
+.ce-form-row input[type="text"],
+.ce-form-row input[type="number"],
+.ce-form-row select,
+.ce-form-row textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  padding: 4px 6px;
+  border-radius: 3px;
+}
+
+.ce-form-row input[type="text"]:focus,
+.ce-form-row input[type="number"]:focus,
+.ce-form-row select:focus,
+.ce-form-row textarea:focus {
+  outline: none;
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+  box-shadow: 0 0 0 2px rgba(63, 169, 245, 0.2);
+}
+
+/* 初始参数面板卡片样式 */
+.ce-initial-params-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ce-initial-param-card {
+  border: 1px solid var(--SmartThemeBorderColor, #444);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.ce-initial-param-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid var(--SmartThemeBorderColor, #444);
+}
+
+.ce-initial-param-entity-name {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--SmartThemeEmColor, #ddd);
+  flex: 1;
+}
+
+.ce-initial-param-card-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ce-initial-param-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.ce-initial-param-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ce-initial-param-control {
+  display: flex;
+  align-items: center;
+}
+
+.ce-initial-param-control input,
+.ce-initial-param-control select {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  padding: 4px 6px;
+  border-radius: 3px;
+}
+
+.ce-initial-param-control input:focus,
+.ce-initial-param-control select:focus {
+  outline: none;
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+  box-shadow: 0 0 0 2px rgba(63, 169, 245, 0.2);
+}
+
+.ce-initial-param-desc {
+  font-size: 0.8rem;
+  color: #888;
+  font-style: italic;
+}
+
+/* 关系型参数目标行的输入框样式 */
+.ce-initial-param-target-row input,
+.ce-initial-param-target-row select {
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  padding: 4px 6px;
+  border-radius: 3px;
+}
+
+.ce-initial-param-target-row input:focus,
+.ce-initial-param-target-row select:focus {
+  outline: none;
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+  box-shadow: 0 0 0 2px rgba(63, 169, 245, 0.2);
+}
+
+/* 关系型参数目标行布局 */
+.ce-initial-param-targets {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ce-initial-param-target-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ce-initial-param-target-label {
+  font-size: 0.85rem;
+  color: var(--SmartThemeEmColor, #ddd);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ce-initial-param-target-row input,
+.ce-initial-param-target-row select {
+  flex: 1;
+  min-width: 0;
+}
+
+.ce-initial-param-add-target {
+  margin-top: 4px;
+}

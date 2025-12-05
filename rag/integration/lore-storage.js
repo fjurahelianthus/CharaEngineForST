@@ -297,7 +297,19 @@ function createDefaultRetrievalConfig() {
     },
     finalTopK: 5,
     tokenBudget: 2000,
-    rerankEnabled: false
+    rerankEnabled: false,
+    // ⭐ 新增：恒定RAG独立检索配置
+    independentRag: {
+      enabled: false,  // 是否启用恒定RAG
+      userInputWeight: 1.0,  // 用户输入权重
+      aiReplyWeight: 0.8,  // AI回复权重
+      maxUserQueries: 3,  // 从用户输入提取的最大查询数
+      maxAiQueries: 2,  // 从AI回复提取的最大查询数
+      topKPerQuery: 3,  // 每个查询返回的结果数
+      totalTokenBudget: 2000,  // 恒定RAG的Token预算（与主配置保持一致）
+      semanticSplitMethod: 'smart',  // 语义拆分方法: 'whole', 'sentence', 'paragraph', 'smart'
+      deduplicateThreshold: 0.9  // 去重相似度阈值
+    }
   };
 }
 

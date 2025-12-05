@@ -13,9 +13,52 @@ import { withParsedPath } from "../core/variables.js";
 const META_KEY = "CharacterEngine";
 
 /**
+ * 计算消息内容的哈希值（用于检测内容变化）
+ * @param {Object} message - ST 消息对象
+ * @returns {string}
+ */
+function computeMessageHash(message) {
+  if (!message) return '';
+  
+  // 组合关键字段：消息内容 + 是否用户消息 + 发送者名称
+  const content = [
+    message.mes || '',
+    message.is_user ? 'user' : 'ai',
+    message.name || ''
+  ].join('|');
+  
+  // 简单哈希算法
+  let hash = 0;
+  for (let i = 0; i < content.length; i++) {
+    const char = content.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash.toString(36);
+}
+
+/**
+ * 获取消息的唯一标识（包含 swipe_id）
+ * @param {Object} message - ST 消息对象
+ * @param {number} index - 消息索引（作为后备）
+ * @returns {string}
+ */
+function getMessageId(message, index) {
+  // 获取当前 swipe 的 ID（默认为 0）
+  const swipeId = typeof message.swipe_id === 'number' ? message.swipe_id : 0;
+  
+  // ST 的消息可能有 send_date 作为唯一标识
+  if (message && message.send_date) {
+    return `msg_${message.send_date}_swipe_${swipeId}`;
+  }
+  // 后备：使用索引 + 内容哈希 + swipe_id
+  return `msg_${index}_${computeMessageHash(message)}_swipe_${swipeId}`;
+}
+
+/**
  * 从 chatMetadata 中读取角色引擎元信息，如果不存在则创建。
  *
- * 新存储结构：
+ * 存储结构：
  * {
  *   initialState: EngineState 序列化对象,
  *   initialized: true,  // 标记已完成初始化
@@ -23,8 +66,13 @@ const META_KEY = "CharacterEngine";
  *     lastComputedMessageIndex: number,
  *     lastComputedStateCheckpoint: EngineState 序列化对象
  *   },
- *   changeSetsByIndex: {
- *     [messageIndex: number]: CeChangeSet
+ *   changeSetsByMessageId: {
+ *     [messageId: string]: {
+ *       changeSet: CeChangeSet,
+ *       contentHash: string,        // 消息内容的哈希值
+ *       prevMessageId: string|null, // 上一条消息的 ID（用于检测分支）
+ *       timestamp: number            // 创建时间戳
+ *     }
  *   }
  * }
  */
@@ -82,7 +130,7 @@ export function getOrCreateEngineMeta(chatId = "") {
         lastComputedMessageIndex: -1,
         lastComputedStateCheckpoint: null
       },
-      changeSetsByIndex: {}
+      changeSetsByMessageId: {}
     };
   }
 
@@ -195,43 +243,155 @@ export async function setCheckpoint(index, state) {
 }
 
 /**
- * 存储 ChangeSet 到指定消息索引
+ * 存储 ChangeSet（基于消息 ID + 内容哈希）
  * @param {number} messageIndex
  * @param {Object} changeSet
  */
 export async function setChangeSetForIndex(messageIndex, changeSet) {
-  await updateEngineMeta(meta => {
-    if (!meta.changeSetsByIndex) {
-      meta.changeSetsByIndex = {};
+  const chat = getChat() || [];
+  const message = chat[messageIndex];
+  
+  if (!message) {
+    // eslint-disable-next-line no-console
+    console.warn(`[CharacterEngine] 无法存储 ChangeSet：消息索引 ${messageIndex} 不存在`);
+    return;
+  }
+  
+  const messageId = getMessageId(message, messageIndex);
+  const contentHash = computeMessageHash(message);
+  
+  // 获取上一条消息的 ID（用于检测分支）
+  let prevMessageId = null;
+  if (messageIndex > 0) {
+    const prevMessage = chat[messageIndex - 1];
+    if (prevMessage) {
+      prevMessageId = getMessageId(prevMessage, messageIndex - 1);
     }
-    meta.changeSetsByIndex[messageIndex] = changeSet;
+  }
+  
+  await updateEngineMeta(meta => {
+    if (!meta.changeSetsByMessageId) {
+      meta.changeSetsByMessageId = {};
+    }
+    
+    meta.changeSetsByMessageId[messageId] = {
+      changeSet,
+      contentHash,
+      prevMessageId,
+      timestamp: Date.now()
+    };
   });
 }
 
 /**
- * 读取指定消息索引的 ChangeSet
+ * 读取 ChangeSet（验证内容哈希和分支）
  * @param {number} messageIndex
  * @returns {Object|null}
  */
 export function getChangeSetForIndex(messageIndex) {
+  const chat = getChat() || [];
+  const message = chat[messageIndex];
+  
+  if (!message) {
+    return null;
+  }
+  
+  const messageId = getMessageId(message, messageIndex);
+  const currentHash = computeMessageHash(message);
+  
   const metaRoot = getChatMetadata();
   const meta = metaRoot[META_KEY];
-  if (!meta || !meta.changeSetsByIndex) return null;
-  return meta.changeSetsByIndex[messageIndex] || null;
+  
+  if (!meta || !meta.changeSetsByMessageId) {
+    return null;
+  }
+  
+  const cached = meta.changeSetsByMessageId[messageId];
+  
+  if (!cached) {
+    // 缓存不存在
+    return null;
+  }
+  
+  // 验证内容哈希
+  if (cached.contentHash !== currentHash) {
+    // eslint-disable-next-line no-console
+    console.debug(`[CharacterEngine] ChangeSet 缓存失效：消息内容已改变（索引 ${messageIndex}）`, {
+      oldHash: cached.contentHash,
+      newHash: currentHash,
+      messageId
+    });
+    return null;
+  }
+  
+  // 验证分支（检查上一条消息是否匹配）
+  if (messageIndex > 0) {
+    const prevMessage = chat[messageIndex - 1];
+    if (prevMessage) {
+      const prevMessageId = getMessageId(prevMessage, messageIndex - 1);
+      if (cached.prevMessageId && cached.prevMessageId !== prevMessageId) {
+        // eslint-disable-next-line no-console
+        console.debug(`[CharacterEngine] ChangeSet 缓存失效：检测到分支变化（索引 ${messageIndex}）`);
+        return null;
+      }
+    }
+  }
+  
+  // 缓存有效
+  return cached.changeSet;
 }
 
 /**
- * 清理指定索引之后的所有 ChangeSet（用于删除消息时）
+ * 清理指定索引之后的所有 ChangeSet 缓存
  * @param {number} messageIndex
  */
 export async function clearChangeSetAfterIndex(messageIndex) {
+  const chat = getChat() || [];
+  
   await updateEngineMeta(meta => {
-    if (!meta.changeSetsByIndex) return;
-    const indices = Object.keys(meta.changeSetsByIndex).map(k => parseInt(k, 10));
-    for (const idx of indices) {
-      if (idx > messageIndex) {
-        delete meta.changeSetsByIndex[idx];
+    if (!meta.changeSetsByMessageId) return;
+    
+    // 收集需要删除的消息 ID
+    const idsToDelete = [];
+    
+    // 遍历所有缓存的 ChangeSet
+    for (const [msgId, cached] of Object.entries(meta.changeSetsByMessageId)) {
+      // 检查这个缓存是否对应于 messageIndex 之后的消息
+      // 通过时间戳判断：如果缓存的时间戳晚于目标索引处消息的时间戳，则删除
+      let shouldDelete = false;
+      
+      // 尝试从 messageId 中提取 send_date
+      const sendDateMatch = msgId.match(/^msg_(\d+)$/);
+      if (sendDateMatch) {
+        const cachedSendDate = parseInt(sendDateMatch[1], 10);
+        // 获取 messageIndex 处消息的 send_date
+        if (messageIndex < chat.length) {
+          const targetMessage = chat[messageIndex];
+          if (targetMessage && targetMessage.send_date) {
+            shouldDelete = cachedSendDate > targetMessage.send_date;
+          }
+        }
+      } else {
+        // 如果无法从 ID 中提取信息，使用时间戳判断
+        // 获取 messageIndex 处消息的缓存时间戳
+        if (messageIndex < chat.length) {
+          const targetMessage = chat[messageIndex];
+          const targetId = getMessageId(targetMessage, messageIndex);
+          const targetCached = meta.changeSetsByMessageId[targetId];
+          if (targetCached && cached.timestamp > targetCached.timestamp) {
+            shouldDelete = true;
+          }
+        }
       }
+      
+      if (shouldDelete) {
+        idsToDelete.push(msgId);
+      }
+    }
+    
+    // 删除
+    for (const id of idsToDelete) {
+      delete meta.changeSetsByMessageId[id];
     }
   });
 }

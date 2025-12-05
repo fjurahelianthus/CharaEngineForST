@@ -1,0 +1,165 @@
+/* ===========================
+ * 编辑器面板样式
+ * =========================== */
+
+.ce-modal-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px 0;
+  border-bottom: 5px solid var(--SmartThemeBorderColor, #333); /* 更粗的底部边框 */
+}
+
+.ce-tab-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 5px 15px; /* 参考 variables-panel 的 section-header padding */
+  border-radius: 6px 6px 0 0;
+  font-size: 14px; /* 参考 variables-panel */
+  color: var(--SmartThemeEmColor, #ddd); /* 使用强调色 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ce-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ce-tab-btn-active {
+  background: rgba(255, 255, 255, 0.08);
+  border-bottom: 2px solid var(--SmartThemeAccentColor, #3fa9f5);
+}
+
+.ce-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.ce-section-header span {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* ===========================
+ * 楼层选择器样式
+ * =========================== */
+
+.ce-floor-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px; /* 参考 variables-panel 的 search-container padding */
+  border-bottom: 1px solid var(--SmartThemeBorderColor, #333);
+  background: rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+}
+
+.ce-floor-selector label {
+  font-size: 0.85rem;
+  color: var(--SmartThemeBodyColor, #ddd);
+  white-space: nowrap;
+}
+
+.ce-floor-selector input[type="number"] {
+  background-color: var(--SmartThemeChatTintColor, #202020); /* 使用ST主题变量 */
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  border-radius: 3px; /* 参考 variables-panel */
+  padding: 3px 6px; /* 参考 variables-panel */
+  font-size: 12px; /* 参考 variables-panel */
+}
+
+.ce-floor-selector input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+}
+
+#ce-floor-total {
+  font-size: 0.85rem;
+  color: #888;
+  margin-left: -4px;
+}
+
+/* ===========================
+ * 时间线视图样式
+ * =========================== */
+
+.ce-timeline-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ce-timeline-section {
+  border: 1px solid var(--SmartThemeBorderColor, #444);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  opacity: 0.7; /* 参考 variables-panel 的 item 默认透明度 */
+}
+
+.ce-timeline-section:hover {
+  opacity: 1; /* 悬停时完全不透明 */
+}
+
+.ce-timeline-section-title {
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.3);
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--SmartThemeAccentColor, #3fa9f5);
+  border-bottom: 1px solid var(--SmartThemeBorderColor, #444);
+}
+
+.ce-timeline-content {
+  padding: 8px 10px;
+}
+
+/* 解析输出子区块 */
+.ce-parse-subsection {
+  margin-top: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ce-parse-subsection:first-child {
+  margin-top: 0;
+}
+
+.ce-parse-subsection-title {
+  padding: 4px 8px;
+  background: rgba(63, 169, 245, 0.15);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #3fa9f5;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 状态变化项 */
+.ce-state-change-item {
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  border-left: 3px solid var(--SmartThemeAccentColor, #3fa9f5);
+  background: rgba(63, 169, 245, 0.08);
+  border-radius: 2px;
+}
+
+.ce-state-change-item:last-child {
+  margin-bottom: 0;
+}
+
+.ce-state-change-item strong {
+  color: var(--SmartThemeAccentColor, #3fa9f5);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.ce-state-change-item div {
+  font-size: 0.85rem;
+  color: #ddd;
+  margin-top: 2px;
+}

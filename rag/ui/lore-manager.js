@@ -45,10 +45,14 @@ function createLoreManagerModal() {
       </div>
       
       <div class="ce-modal-body">
-        <!-- 向量化配置区域 -->
-        <div class="ce-section-header">
-          <span>向量化配置</span>
-        </div>
+        <!-- 两列布局容器 -->
+        <div class="ce-lore-manager-layout">
+          <!-- 左列：向量化配置、分块策略、集合管理 -->
+          <div class="ce-lore-manager-left">
+            <!-- 向量化配置区域 -->
+            <div class="ce-section-header">
+              <span>向量化配置</span>
+            </div>
         <div style="margin-top: 10px; padding: 15px; background: var(--black30a, rgba(0,0,0,0.3)); border-radius: 8px;">
           <div style="margin-bottom: 12px;">
             <label style="display: block; margin-bottom: 6px; font-weight: 500;">
@@ -102,12 +106,12 @@ function createLoreManagerModal() {
               <!-- 已缓存模型列表将显示在这里 -->
             </div>
           </div>
-        </div>
-        
-        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--SmartThemeBorderColor, #444);">
-          <div class="ce-section-header">
-            <span>分块策略配置</span>
-          </div>
+            </div>
+            
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--SmartThemeBorderColor, #444);">
+              <div class="ce-section-header">
+                <span>分块策略配置</span>
+              </div>
           
           <div style="margin-top: 10px; padding: 15px; background: var(--black30a, rgba(0,0,0,0.3)); border-radius: 8px;">
             <div style="margin-bottom: 12px;">
@@ -211,12 +215,12 @@ function createLoreManagerModal() {
                 在文档中使用分隔符手动标记分块位置，例如: ---CHUNK---
               </div>
             </div>
-          </div>
-        </div>
-        
-        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--SmartThemeBorderColor, #444);">
-          <div class="ce-section-header">
-            <span>集合管理</span>
+              </div>
+            </div>
+            
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--SmartThemeBorderColor, #444);">
+              <div class="ce-section-header">
+                <span>集合管理</span>
           <div style="display: flex; gap: 8px;">
             <button class="ce-btn ce-btn-small" data-action="new-collection">
               <span>➕</span> 新建集合
@@ -234,12 +238,109 @@ function createLoreManagerModal() {
               <span>加载中...</span>
             </div>
           </div>
-        </div>
-        
-        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--SmartThemeBorderColor, #444);">
-          <div class="ce-section-header">
-            <span>混合检索配置</span>
+              </div>
+            </div>
           </div>
+          
+          <!-- 右列：检索相关配置 -->
+          <div class="ce-lore-manager-right">
+            <!-- 独立恒定RAG配置 - 移到最上方 -->
+            <div class="ce-section-header" style="margin-bottom: 10px;">
+              <span>独立恒定RAG配置</span>
+              <button class="ce-btn ce-btn-small ce-btn-secondary" data-action="toggle-independent-rag" title="展开/折叠">
+                <span class="ce-collapsible-toggle" id="ce-independent-rag-toggle">▼</span>
+              </button>
+            </div>
+            
+            <div id="ce-independent-rag-section" style="display: none; margin-bottom: 20px; padding: 15px; background: var(--black30a, rgba(0,0,0,0.3)); border-radius: 8px;">
+              <div style="margin-bottom: 12px; padding: 10px; background: var(--black50a, rgba(0,0,0,0.5)); border-radius: 4px; font-size: 0.9em; color: var(--SmartThemeQuoteColor, #999);">
+                ℹ️ <strong>独立恒定RAG</strong>会在每次对话时自动检索，无需解析模型调用。基于用户输入和AI回复进行语义检索。<br>
+                <strong>启用方式：</strong>请在<strong>插件设置界面</strong>勾选"启用独立恒定 RAG"开关。<br>
+                <strong>此处配置：</strong>仅用于调整检索参数（权重、查询数等），不控制启用/禁用。
+              </div>
+              
+              <div id="ce-independent-rag-config">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                  <div class="ce-form-row-horizontal">
+                    <label>
+                      <span class="ce-form-label">用户输入权重:</span>
+                      <input type="number" id="ce-rag-independent-user-weight" min="0" max="2" step="0.1" value="1.0">
+                    </label>
+                  </div>
+                  <div class="ce-form-row-horizontal">
+                    <label>
+                      <span class="ce-form-label">AI回复权重:</span>
+                      <input type="number" id="ce-rag-independent-ai-weight" min="0" max="2" step="0.1" value="0.8">
+                    </label>
+                  </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                  <div class="ce-form-row-horizontal">
+                    <label>
+                      <span class="ce-form-label">用户查询数:</span>
+                      <input type="number" id="ce-rag-independent-max-user-queries" min="1" max="10" value="3">
+                    </label>
+                  </div>
+                  <div class="ce-form-row-horizontal">
+                    <label>
+                      <span class="ce-form-label">AI查询数:</span>
+                      <input type="number" id="ce-rag-independent-max-ai-queries" min="1" max="10" value="2">
+                    </label>
+                  </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                  <div class="ce-form-row-horizontal">
+                    <label>
+                      <span class="ce-form-label">每查询TopK:</span>
+                      <input type="number" id="ce-rag-independent-topk-per-query" min="1" max="10" value="3">
+                    </label>
+                  </div>
+                  <div class="ce-form-row-horizontal">
+                    <label>
+                      <span class="ce-form-label">Token预算:</span>
+                      <input type="number" id="ce-rag-independent-token-budget" min="500" max="4000" step="100" value="2000">
+                    </label>
+                  </div>
+                </div>
+                
+                <div style="margin-bottom: 12px;">
+                  <div class="ce-form-row-horizontal">
+                    <label>
+                      <span class="ce-form-label">去重阈值:</span>
+                      <input type="number" id="ce-rag-independent-dedupe-threshold" min="0" max="1" step="0.05" value="0.9">
+                    </label>
+                  </div>
+                </div>
+                
+                <div style="margin-bottom: 12px;">
+                  <label style="display: block; margin-bottom: 6px; font-weight: 500;">语义拆分方法:</label>
+                  <select id="ce-rag-independent-split-method" style="width: 100%; padding: 8px; background: var(--black50a, rgba(0,0,0,0.5)); border: 1px solid var(--SmartThemeBorderColor, #444); border-radius: 4px; color: var(--SmartThemeBodyColor, #ddd);">
+                    <option value="whole">整体查询（不拆分）</option>
+                    <option value="sentence">按句子拆分</option>
+                    <option value="paragraph">按段落拆分</option>
+                    <option value="smart">智能拆分（推荐）</option>
+                  </select>
+                </div>
+                
+                <div style="font-size: 0.85em; color: var(--SmartThemeQuoteColor, #999); line-height: 1.6;">
+                  <strong>参数说明:</strong><br>
+                  • <strong>权重</strong>: 控制用户输入和AI回复在检索中的重要性<br>
+                  • <strong>查询数</strong>: 从输入/回复中提取的查询数量<br>
+                  • <strong>每查询TopK</strong>: 每个查询返回的结果数<br>
+                  • <strong>Token预算</strong>: 恒定RAG注入的最大token数<br>
+                  • <strong>去重阈值</strong>: 相似度超过此值的结果会被去重
+                </div>
+              </div>
+            </div>
+            
+            <!-- 混合检索配置 -->
+            <div class="ce-hybrid-search-wrapper">
+              <div class="ce-section-header">
+                <span>混合检索配置</span>
+              </div>
           
           <!-- 检索模式选择 -->
           <div style="margin-top: 10px;">
@@ -383,6 +484,8 @@ function createLoreManagerModal() {
                   <span class="ce-form-label">Token预算:</span>
                   <input type="number" id="ce-rag-token-budget" min="500" max="4000" step="100" value="2000">
                 </label>
+              </div>
+            </div>
               </div>
             </div>
           </div>
@@ -651,9 +754,54 @@ function loadRetrievalConfig(modal, loreConfig) {
   if (finalTopKInput) finalTopKInput.value = config.finalTopK || 5;
   if (tokenBudgetInput) tokenBudgetInput.value = config.tokenBudget || 2000;
   
+  // ⭐ 加载恒定RAG配置
+  loadIndependentRagConfig(modal, config);
+  
   // 更新UI显示状态
   updateRetrievalConfigVisibility(modal);
   updateChunkConfigVisibility(modal);
+  updateIndependentRagConfigVisibility(modal);
+}
+
+/**
+ * 加载恒定RAG配置
+ * @param {HTMLElement} modal
+ * @param {Object} retrievalConfig
+ */
+function loadIndependentRagConfig(modal, retrievalConfig) {
+  const independentRagConfig = retrievalConfig.independentRag || {};
+  
+  // 加载权重配置
+  const userWeightInput = modal.querySelector('#ce-rag-independent-user-weight');
+  const aiWeightInput = modal.querySelector('#ce-rag-independent-ai-weight');
+  if (userWeightInput) userWeightInput.value = independentRagConfig.userInputWeight || 1.0;
+  if (aiWeightInput) aiWeightInput.value = independentRagConfig.aiReplyWeight || 0.8;
+  
+  // 加载查询数配置
+  const maxUserQueriesInput = modal.querySelector('#ce-rag-independent-max-user-queries');
+  const maxAiQueriesInput = modal.querySelector('#ce-rag-independent-max-ai-queries');
+  if (maxUserQueriesInput) maxUserQueriesInput.value = independentRagConfig.maxUserQueries || 3;
+  if (maxAiQueriesInput) maxAiQueriesInput.value = independentRagConfig.maxAiQueries || 2;
+  
+  // 加载其他配置
+  const topKPerQueryInput = modal.querySelector('#ce-rag-independent-topk-per-query');
+  const tokenBudgetInput = modal.querySelector('#ce-rag-independent-token-budget');
+  const dedupeThresholdInput = modal.querySelector('#ce-rag-independent-dedupe-threshold');
+  const splitMethodSelect = modal.querySelector('#ce-rag-independent-split-method');
+  
+  if (topKPerQueryInput) topKPerQueryInput.value = independentRagConfig.topKPerQuery || 3;
+  if (tokenBudgetInput) tokenBudgetInput.value = independentRagConfig.totalTokenBudget || retrievalConfig.tokenBudget || 2000;
+  if (dedupeThresholdInput) dedupeThresholdInput.value = independentRagConfig.deduplicateThreshold || 0.9;
+  if (splitMethodSelect) splitMethodSelect.value = independentRagConfig.semanticSplitMethod || 'smart';
+}
+
+/**
+ * 更新恒定RAG配置区域的可见性
+ * @param {HTMLElement} modal
+ */
+function updateIndependentRagConfigVisibility(modal) {
+  // 恒定RAG配置区域始终显示，不再需要切换
+  // 启用/禁用由插件设置界面的开关控制
 }
 
 /**
@@ -803,6 +951,32 @@ function bindLoreManagerEvents(modal) {
   modal.querySelector('#ce-rag-chunk-strategy')?.addEventListener('change', () => {
     updateChunkConfigVisibility(modal);
   });
+  
+  // 独立恒定RAG折叠切换事件
+  modal.querySelector('[data-action="toggle-independent-rag"]')?.addEventListener('click', () => {
+    toggleIndependentRagSection(modal);
+  });
+}
+
+/**
+ * 切换独立恒定RAG配置区域的显示/隐藏
+ * @param {HTMLElement} modal
+ */
+function toggleIndependentRagSection(modal) {
+  const section = modal.querySelector('#ce-independent-rag-section');
+  const toggle = modal.querySelector('#ce-independent-rag-toggle');
+  
+  if (!section || !toggle) return;
+  
+  const isHidden = section.style.display === 'none';
+  
+  if (isHidden) {
+    section.style.display = 'block';
+    toggle.textContent = '▲';
+  } else {
+    section.style.display = 'none';
+    toggle.textContent = '▼';
+  }
 }
 
 /**
@@ -1124,13 +1298,24 @@ async function handleSaveConfig(modal) {
       },
       finalTopK,
       tokenBudget,
-      rerankEnabled: false
+      rerankEnabled: false,
+      // ⭐ 保存恒定RAG配置（不包含enabled字段，由插件设置控制）
+      independentRag: {
+        userInputWeight: parseFloat(modal.querySelector('#ce-rag-independent-user-weight')?.value || '1.0'),
+        aiReplyWeight: parseFloat(modal.querySelector('#ce-rag-independent-ai-weight')?.value || '0.8'),
+        maxUserQueries: parseInt(modal.querySelector('#ce-rag-independent-max-user-queries')?.value || '3'),
+        maxAiQueries: parseInt(modal.querySelector('#ce-rag-independent-max-ai-queries')?.value || '2'),
+        topKPerQuery: parseInt(modal.querySelector('#ce-rag-independent-topk-per-query')?.value || '3'),
+        totalTokenBudget: parseInt(modal.querySelector('#ce-rag-independent-token-budget')?.value || '2000'),
+        semanticSplitMethod: modal.querySelector('#ce-rag-independent-split-method')?.value || 'smart',
+        deduplicateThreshold: parseFloat(modal.querySelector('#ce-rag-independent-dedupe-threshold')?.value || '0.9')
+      }
     };
     
     const updatedConfig = saveLoreConfig(charConfig, loreConfig);
     await saveConfigForCurrentCharacter(updatedConfig);
     
-    showMessage(modal, '配置已保存！新建集合将使用此分块配置。', 'success');
+    showMessage(modal, '配置已保存！新建集合将使用此分块配置，恒定RAG配置已更新。<br><strong>提示：</strong>请在插件设置界面启用"启用独立恒定 RAG"开关。', 'success', 5000);
   } catch (err) {
     showMessage(modal, `保存失败: ${err.message}`, 'error');
   }

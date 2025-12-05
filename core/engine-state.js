@@ -2,7 +2,7 @@
 // 注意：本文件不依赖 SillyTavern 宿主，只做纯数据逻辑。
 
 import { resolveSymbolicOperation } from "./symbolic-mapper.js";
-import { applyCastIntent } from "./cast-manager.js";
+import { applyCastIntent, applyLocationCastIntent } from "./cast-manager.js";
 import { buildNormalizedEntities } from "./entities.js";
 
 /**
@@ -16,7 +16,7 @@ import { buildNormalizedEntities } from "./entities.js";
 
 /**
  * @typedef {Object} CeSceneState
- * @property {string|null} locationHint   // 场景地点提示，例如 "放学后的教室门口"
+ * @property {string|null} locationHint   // 场景地点提示，例如 "放学后的教室门口"（已废弃，使用 locationCast.current）
  * @property {string[]} sceneTags         // 场景标签数组，例如 ["吵架后冷静期","约会"]
  */
 
@@ -25,6 +25,12 @@ import { buildNormalizedEntities } from "./entities.js";
  * @property {string[]} focus
  * @property {string[]} presentSupporting
  * @property {string[]} offstageRelated
+ */
+
+/**
+ * @typedef {Object} CeLocationCast
+ * @property {string|null} current        // 当前地点（完整注入baseinfo + advanceinfo）
+ * @property {string[]} candidate         // 候选地点列表（仅注入名称）
  */
 
 /**
@@ -43,7 +49,8 @@ import { buildNormalizedEntities } from "./entities.js";
  * @property {string} chatId                // 当前 chat 的标识（由 integration 层填充）
  * @property {CeVariablesState} variables   // 通用变量桶（包括短期情绪/意图在内的所有参数，统一通过 CeVariableOp 变更）
  * @property {CeSceneState} scene
- * @property {CeCastLayer} cast
+ * @property {CeCastLayer} cast             // 角色Cast分层
+ * @property {CeLocationCast} locationCast  // 地点Cast（current + candidate）
  * @property {Object.<string, CeEntityRuntime>} entitiesRuntime // 运行时实体桶（仅存本条世界线下的临时实体与覆盖）
  * @property {Object|undefined} [worldIntent] // WorldContextIntent 对象（用于RAG检索）
  */
@@ -55,6 +62,7 @@ import { buildNormalizedEntities } from "./entities.js";
  * @param {Object} [params.initialVariables]
  * @param {Object} [params.initialScene]
  * @param {Object} [params.initialCast]
+ * @param {Object} [params.initialLocationCast]  // 初始地点Cast
  * @param {Object.<string, CeEntityRuntime>} [params.initialEntitiesRuntime]  // 初始运行时实体（通常为空，由聊天存档重建）
  * @returns {EngineState}
  */
@@ -64,6 +72,7 @@ export function createInitialEngineState(params) {
     initialVariables = {},
     initialScene = {},
     initialCast = {},
+    initialLocationCast = {},
     initialEntitiesRuntime = {}
   } = params || {};
 
@@ -77,13 +86,17 @@ export function createInitialEngineState(params) {
       global: initialVariables.global || {}
     },
     scene: {
-      locationHint: initialScene.locationHint || null,
+      locationHint: initialScene.locationHint || null,  // 保留用于向后兼容
       sceneTags: Array.isArray(initialScene.sceneTags) ? [...initialScene.sceneTags] : []
     },
     cast: {
       focus: Array.isArray(initialCast.focus) ? [...initialCast.focus] : [],
       presentSupporting: Array.isArray(initialCast.presentSupporting) ? [...initialCast.presentSupporting] : [],
       offstageRelated: Array.isArray(initialCast.offstageRelated) ? [...initialCast.offstageRelated] : []
+    },
+    locationCast: {
+      current: initialLocationCast.current || initialScene.locationHint || null,  // 向后兼容：优先使用 locationCast，否则使用 locationHint
+      candidate: Array.isArray(initialLocationCast.candidate) ? [...initialLocationCast.candidate] : []
     },
     entitiesRuntime: initialEntitiesRuntime && typeof initialEntitiesRuntime === "object"
       ? { ...initialEntitiesRuntime }
@@ -371,6 +384,27 @@ export function applyChangeSet(prevState, changeSet, parameterDefs = [], entityD
         sceneDelta.castIntent,
         { availableCharacters }
       );
+    }
+
+    // 4. 地点Cast管理（地点切换与候选地点）
+    if (sceneDelta.locationCastIntent) {
+      // 构建可用地点列表（配置层 + 运行时）
+      const availableLocations = buildNormalizedEntities(
+        entityDefs,
+        next.entitiesRuntime,
+        null,
+        null,
+        parameterDefs
+      ).filter(e => e.type === "location");
+      
+      next.locationCast = applyLocationCastIntent(
+        next.locationCast,
+        sceneDelta.locationCastIntent,
+        { availableLocations, allowUnknownLocations: true }
+      );
+      
+      // 向后兼容：同步更新 scene.locationHint
+      next.scene.locationHint = next.locationCast.current;
     }
   }
 

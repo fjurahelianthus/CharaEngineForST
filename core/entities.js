@@ -29,9 +29,9 @@
  * 结构与关联（严格受类型约束）：
  *
  * - 对于 type === "location"（地点实体）：
- *   - childrenNames：
- *     - 子地点名称列表，用于表达地点层级嵌套；
- *     - 例如："东京" 的 childrenNames 中可以包含 "爱知学院"。
+ *   - parentLocation：
+ *     - 父地点名称，用于表达地点层级嵌套；
+ *     - 例如："爱知学院" 的 parentLocation 可以是 "东京"。
  *   - characters：
  *     - 在该地点中「常见出现的角色名称列表」（场景角色），用于 cast 管理时为解析模型提供候选角色。
  *
@@ -45,7 +45,7 @@
  *
  * 重要约束：
  * - 仅允许以下三类结构/关联：
- *   1) 地点 → 子地点（location.childrenNames）
+ *   1) 地点 → 父地点（location.parentLocation）
  *   2) 地点 → 场景角色（location.characters）
  *   3) 角色 → 常见地点（character.locations）
  * - 除上述「地点下角色」这一特殊关系外，不存在其他实体间关联。
@@ -56,7 +56,7 @@
  * @property {string} [id]
  * @property {CeEntityType} type
  * @property {string} [baseinfo]
- * @property {string[]} [childrenNames]
+ * @property {string} [parentLocation]
  * @property {string[]} [locations]
  * @property {string[]} [characters]
  * @property {string[]} [parameterNames] // 该实体绑定的参数名列表（与 CeParameterDefinition.name 对齐），用于初始参数设置与状态观察
@@ -65,6 +65,9 @@
  * @property {string} [summaryForSupporting] // presentSupporting 层使用的 1-3 句人设摘要
  * @property {string[]} [tagsForSupporting] // presentSupporting 层使用的关键标签列表
  * @property {string} [descForOffstage] // offstageRelated 层使用的一句话说明
+ *
+ * 地点候选提示字段（仅对 type === "location" 有效）：
+ * @property {string} [candidateHint] // 候选地点状态下使用的简短提示（1句话说明）
  */
 
 /**
@@ -129,14 +132,16 @@ export function buildNormalizedEntities(configEntities, runtimeEntitiesMap, owne
      id: (src.id || existing?.id || "").trim(),
      type: normalizeType(src.type, existing?.type),
      baseinfo: src.baseinfo || existing?.baseinfo || "",
-     childrenNames: mergeList(existing?.childrenNames, src.childrenNames),
+     parentLocation: src.parentLocation || existing?.parentLocation || "",
      locations: mergeList(existing?.locations, src.locations),
      characters: mergeList(existing?.characters, src.characters),
      parameterNames: mergeList(existing?.parameterNames, src.parameterNames),
-     // Cast 分层加载字段
+     // Cast 分层加载字段（角色）
      summaryForSupporting: src.summaryForSupporting || existing?.summaryForSupporting || "",
      tagsForSupporting: mergeList(existing?.tagsForSupporting, src.tagsForSupporting),
-     descForOffstage: src.descForOffstage || existing?.descForOffstage || ""
+     descForOffstage: src.descForOffstage || existing?.descForOffstage || "",
+     // 候选提示字段（地点）
+     candidateHint: src.candidateHint || existing?.candidateHint || ""
    };
    byName.set(name, merged);
  };
@@ -157,22 +162,30 @@ export function buildNormalizedEntities(configEntities, runtimeEntitiesMap, owne
  // 3) 按类型清理不符合语义的结构字段
  for (const entity of byName.values()) {
    if (entity.type === "character") {
-     entity.childrenNames = [];
+     entity.parentLocation = "";
      entity.characters = [];
+     entity.candidateHint = "";  // 清除地点字段
      // 保留 Cast 分层字段
    } else if (entity.type === "location") {
-     // childrenNames / characters / locations 合法：
-     // - childrenNames：地点层级嵌套
+     // parentLocation / characters / locations 合法：
+     // - parentLocation：地点层级嵌套（父地点）
      // - characters：场景角色
      // - locations：由角色引用填充形成的「反向索引」，在对称修正中使用
+     // 清除角色 Cast 分层字段
+     entity.summaryForSupporting = "";
+     entity.tagsForSupporting = [];
+     entity.descForOffstage = "";
+     // 保留 candidateHint（地点字段）
    } else if (entity.type === "other") {
-     entity.childrenNames = [];
+     entity.parentLocation = "";
      entity.locations = [];
      entity.characters = [];
      // 清除 Cast 分层字段（仅角色使用）
      entity.summaryForSupporting = "";
      entity.tagsForSupporting = [];
      entity.descForOffstage = "";
+     // 清除地点字段
+     entity.candidateHint = "";
    }
  }
 
@@ -195,7 +208,7 @@ export function buildNormalizedEntities(configEntities, runtimeEntitiesMap, owne
            id: "",
            type: "character",
            baseinfo: "",
-           childrenNames: [],
+           parentLocation: "",
            locations: [],
            characters: []
          };
@@ -225,7 +238,7 @@ export function buildNormalizedEntities(configEntities, runtimeEntitiesMap, owne
            id: "",
            type: "location",
            baseinfo: "",
-           childrenNames: [],
+           parentLocation: "",
            locations: [],
            characters: []
          };
@@ -253,7 +266,7 @@ export function buildNormalizedEntities(configEntities, runtimeEntitiesMap, owne
          id: "",
          type: "other",
          baseinfo: "",
-         childrenNames: [],
+         parentLocation: "",
          locations: [],
          characters: []
        });
@@ -276,7 +289,7 @@ export function buildNormalizedEntities(configEntities, runtimeEntitiesMap, owne
        id: "__user__",
        type: "character",
        baseinfo: userBaseinfo,  // 强制使用 ST Persona
-       childrenNames: [],
+       parentLocation: "",
        locations: [],  // {{user}} 没有常见地点
        characters: [],
        parameterNames: [],  // 可以绑定参数

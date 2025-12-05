@@ -310,3 +310,207 @@ export function createEmptyCast() {
     offstageRelated: []
   };
 }
+
+// ============================================================================
+// 地点Cast管理：两层结构（current + candidate)
+// ============================================================================
+
+/**
+ * @typedef {Object} LocationCastIntent
+ * @property {string|null} [setCurrent] - 设置当前地点（直接覆盖）
+ * @property {string[]} [addCandidate] - 添加候选地点
+ * @property {string[]} [removeCandidate] - 移除候选地点
+ */
+
+/**
+ * @typedef {Object} ApplyLocationCastIntentOptions
+ * @property {number} [maxCandidate] - 候选地点最大数量（默认10）
+ * @property {import("./entities.js").CeEntityRuntime[]} [availableLocations] - 可用地点列表（用于验证）
+ * @property {boolean} [allowUnknownLocations] - 是否允许使用实体列表中不存在的地点（默认true，支持解析模型自由创建）
+ */
+
+/**
+ * 应用地点Cast变更意图，返回新的地点Cast状态。
+ * 
+ * 设计要点：
+ * - current：当前地点，完整注入 baseinfo + advanceinfo
+ * - candidate：候选地点列表，仅注入名称
+ * - 支持解析模型使用实体列表中不存在的地点（allowUnknownLocations=true）
+ * - 当设置新的 current 时，旧的 current 自动加入 candidate（如果不在其中）
+ * 
+ * @param {import("../core/engine-state.js").CeLocationCast} currentLocationCast - 当前地点Cast状态
+ * @param {LocationCastIntent} locationCastIntent - 地点Cast变更意图
+ * @param {ApplyLocationCastIntentOptions} [options] - 配置选项
+ * @returns {import("../core/engine-state.js").CeLocationCast} 新的地点Cast状态
+ */
+export function applyLocationCastIntent(currentLocationCast, locationCastIntent, options = {}) {
+  const {
+    maxCandidate = 10,
+    availableLocations = [],
+    allowUnknownLocations = true
+  } = options;
+
+  // 深拷贝当前状态
+  const newLocationCast = {
+    current: currentLocationCast?.current || null,
+    candidate: Array.isArray(currentLocationCast?.candidate) 
+      ? [...currentLocationCast.candidate] 
+      : []
+  };
+
+  if (!locationCastIntent || typeof locationCastIntent !== "object") {
+    return newLocationCast;
+  }
+
+  // 验证地点是否可用
+  const isLocationAvailable = (locationName) => {
+    if (!locationName || typeof locationName !== "string") return false;
+    const trimmed = locationName.trim();
+    if (!trimmed) return false;
+    
+    // 如果允许未知地点，直接返回true
+    if (allowUnknownLocations) return true;
+    
+    // 否则检查是否在可用地点列表中
+    return availableLocations.some(loc => loc.name === trimmed);
+  };
+
+  // 1. 处理 setCurrent（设置当前地点）
+  if (locationCastIntent.setCurrent !== undefined) {
+    const newCurrent = typeof locationCastIntent.setCurrent === "string" 
+      ? locationCastIntent.setCurrent.trim() 
+      : null;
+    
+    if (newCurrent && isLocationAvailable(newCurrent)) {
+      // 将旧的 current 加入 candidate（如果存在且不在candidate中）
+      if (newLocationCast.current && 
+          newLocationCast.current !== newCurrent &&
+          !newLocationCast.candidate.includes(newLocationCast.current)) {
+        newLocationCast.candidate.unshift(newLocationCast.current);
+      }
+      
+      // 设置新的 current
+      newLocationCast.current = newCurrent;
+      
+      // 从 candidate 中移除新的 current（避免重复）
+      newLocationCast.candidate = newLocationCast.candidate.filter(
+        name => name !== newCurrent
+      );
+    } else if (newCurrent === null || newCurrent === "") {
+      // 允许清空 current
+      if (newLocationCast.current && !newLocationCast.candidate.includes(newLocationCast.current)) {
+        newLocationCast.candidate.unshift(newLocationCast.current);
+      }
+      newLocationCast.current = null;
+    } else if (!allowUnknownLocations) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[CharacterEngine] 地点 "${newCurrent}" 不在可用地点列表中，setCurrent 操作被忽略`
+      );
+    }
+  }
+
+  // 2. 处理 addCandidate（添加候选地点）
+  if (Array.isArray(locationCastIntent.addCandidate)) {
+    for (const item of locationCastIntent.addCandidate) {
+      const name = typeof item === "string" ? item.trim() : "";
+      if (!name) continue;
+      
+      // 跳过已在 candidate 或 current 中的地点
+      if (newLocationCast.candidate.includes(name) || newLocationCast.current === name) {
+        continue;
+      }
+      
+      // 验证地点可用性
+      if (!isLocationAvailable(name)) {
+        if (!allowUnknownLocations) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            `[CharacterEngine] 地点 "${name}" 不在可用地点列表中，addCandidate 操作被忽略`
+          );
+        }
+        continue;
+      }
+      
+      // 检查是否超过上限
+      if (newLocationCast.candidate.length >= maxCandidate) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[CharacterEngine] 候选地点已达上限 ${maxCandidate}，无法添加 "${name}"`
+        );
+        break;
+      }
+      
+      newLocationCast.candidate.push(name);
+    }
+  }
+
+  // 3. 处理 removeCandidate（移除候选地点）
+  if (Array.isArray(locationCastIntent.removeCandidate)) {
+    for (const item of locationCastIntent.removeCandidate) {
+      const name = typeof item === "string" ? item.trim() : "";
+      if (!name) continue;
+      
+      newLocationCast.candidate = newLocationCast.candidate.filter(
+        candidateName => candidateName !== name
+      );
+    }
+  }
+
+  // 4. 确保 candidate 不超过上限（防御性检查）
+  if (newLocationCast.candidate.length > maxCandidate) {
+    newLocationCast.candidate = newLocationCast.candidate.slice(0, maxCandidate);
+  }
+
+  return newLocationCast;
+}
+
+/**
+ * 创建一个空的地点Cast状态。
+ * 
+ * @returns {import("../core/engine-state.js").CeLocationCast}
+ */
+export function createEmptyLocationCast() {
+  return {
+    current: null,
+    candidate: []
+  };
+}
+
+/**
+ * 检查地点是否在Cast中（current 或 candidate）。
+ * 
+ * @param {import("../core/engine-state.js").CeLocationCast} locationCast - 地点Cast状态
+ * @param {string} locationName - 地点名称
+ * @returns {boolean}
+ */
+export function isLocationInCast(locationCast, locationName) {
+  if (!locationCast || typeof locationCast !== "object") return false;
+  const name = String(locationName || "").trim();
+  if (!name) return false;
+  
+  return locationCast.current === name || 
+         (Array.isArray(locationCast.candidate) && locationCast.candidate.includes(name));
+}
+
+/**
+ * 获取地点在Cast中的层级。
+ * 
+ * @param {import("../core/engine-state.js").CeLocationCast} locationCast - 地点Cast状态
+ * @param {string} locationName - 地点名称
+ * @returns {"current"|"candidate"|null} 地点所在层级，若不在Cast中则返回null
+ */
+export function getLocationLayer(locationCast, locationName) {
+  if (!locationCast || typeof locationCast !== "object") return null;
+  const name = String(locationName || "").trim();
+  if (!name) return null;
+  
+  if (locationCast.current === name) {
+    return "current";
+  }
+  if (Array.isArray(locationCast.candidate) && locationCast.candidate.includes(name)) {
+    return "candidate";
+  }
+  
+  return null;
+}

@@ -37,6 +37,10 @@
           <input type="checkbox" id="ce_use_world_rag" />
           <label for="ce_use_world_rag" title="实验功能，默认关闭；启用后可按 WorldContextIntent 从设定与日志中检索相关片段">启用世界观 RAG</label>
         </div>
+        <div class="flex-container alignItemsCenter" style="gap:8px;flex-wrap:wrap;margin-top:8px;">
+          <input type="checkbox" id="ce_use_independent_rag" />
+          <label for="ce_use_independent_rag" title="启用独立恒定 RAG 检索，无需解析模型调用，直接基于用户输入和AI回复进行检索">启用独立恒定 RAG</label>
+        </div>
         <div class="flex-container alignItemsCenter ce-settings-button-row" style="gap:8px;margin-top:4px;">
           <button id="ce_open_lore_manager" class="menu_button" type="button"
             title="打开世界观设定管理器，管理RAG集合、文档和向量化">

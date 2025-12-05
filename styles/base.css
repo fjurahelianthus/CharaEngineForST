@@ -1,0 +1,145 @@
+/* 角色引擎扩展基础样式 */
+
+/* 设置面板局部微调 */
+.ce-settings-root .section-divider {
+  font-size: 0.8em;
+  color: #8f8f8f;
+  margin: 0.5em 0 0.3em;
+  letter-spacing: 0.05em;
+}
+
+.ce-settings-root label {
+  margin-top: 0.2em;
+}
+
+.ce-settings-root input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+/* 设置面板：作者工具按钮行，强制单行横向排列 */
+.ce-settings-root .ce-settings-button-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 防止按钮在行内被压缩换行 */
+.ce-settings-root .ce-settings-button-row .menu_button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* 调试面板容器（暂未实现逻辑，用于预留位置） */
+.ce-debug-panel {
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--SmartThemeBorderColor, #333);
+  background-color: var(--SmartThemeBlurTintColor, #1e1e1e);
+  font-size: 0.85em;
+  max-height: 260px;
+  overflow: auto;
+}
+
+.ce-debug-panel-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--SmartThemeBodyColor, #e9e9e9);
+}
+
+.ce-debug-panel-section {
+  margin-top: 4px;
+}
+
+.ce-debug-panel-section-title {
+  font-weight: 500;
+  color: #bbb;
+  margin-bottom: 2px;
+}
+
+.ce-debug-panel-kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+}
+
+.ce-debug-panel-kv-key {
+  color: #aaa;
+  flex: 0 0 auto;
+}
+
+.ce-debug-panel-kv-value {
+  color: #ddd;
+  flex: 1 1 auto;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 将来用于显示 cast 层级的小标签 */
+.ce-cast-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 0.75em;
+  margin-right: 4px;
+  border: 1px solid var(--SmartThemeBorderColor, #444);
+}
+
+.ce-cast-badge-focus {
+  background-color: rgba(46, 204, 113, 0.18);
+  color: #2ecc71;
+}
+
+.ce-cast-badge-supporting {
+  background-color: rgba(52, 152, 219, 0.18);
+  color: #3498db;
+}
+
+.ce-cast-badge-offstage {
+  background-color: rgba(155, 89, 182, 0.14);
+  color: #9b59b6;
+}
+
+/* 小的提示文字 */
+.ce-hint {
+  font-size: 0.8em;
+  color: #888;
+  margin-top: 4px;
+}
+
+/* 按钮微调，复用 ST 的 .menu_button 外观时不破坏布局 */
+.ce-btn {
+  border-radius: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--SmartThemeBodyColor, #eee);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.ce-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ce-btn-secondary {
+  background: transparent;
+}
+
+.ce-btn-small {
+  font-size: 0.8rem;
+  padding: 3px 8px;
+}
+
+.ce-small-hint {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 2px;
+}

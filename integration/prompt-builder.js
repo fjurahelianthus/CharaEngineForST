@@ -207,26 +207,15 @@ export async function buildPromptInjectionBlock(engineState) {
 
   const activeCharacterNames = Array.from(characterLayers.keys());
 
-  // 4) 选取地点实体
-  const activeLocationNames = [];
-  const pushLocation = (rawName) => {
-    const name = typeof rawName === "string" ? rawName.trim() : "";
-    if (!name || activeLocationNames.includes(name)) return;
-    const ent = entitiesByName.get(name);
-    if (!ent || ent.type !== "location") return;
-    activeLocationNames.push(name);
-  };
-
-  const locationHint = engineState?.scene?.locationHint || "";
-  if (typeof locationHint === "string" && locationHint.trim()) {
-    pushLocation(locationHint);
-  }
-
-  for (const charName of activeCharacterNames) {
-    const ent = entitiesByName.get(charName);
-    if (!ent || ent.type !== "character" || !Array.isArray(ent.locations)) continue;
-    ent.locations.forEach(pushLocation);
-  }
+  // 4) 选取地点实体（基于新的 locationCast 系统）
+  const currentLocation = engineState?.locationCast?.current || null;
+  const candidateLocations = Array.isArray(engineState?.locationCast?.candidate)
+    ? engineState.locationCast.candidate
+    : [];
+  
+  // 向后兼容：如果 locationCast 为空，尝试使用旧的 locationHint
+  const fallbackLocationHint = engineState?.scene?.locationHint || "";
+  const effectiveCurrentLocation = currentLocation || (fallbackLocationHint.trim() ? fallbackLocationHint : null);
 
   // 5) 组装结构化块
   const lines = [];
@@ -362,15 +351,24 @@ export async function buildPromptInjectionBlock(engineState) {
     charIndex += 1;
   }
 
-  // 5.2 地点块
-  let locIndex = 1;
-  for (const name of activeLocationNames) {
-    const ent = entitiesByName.get(name);
-    const bundle = bundles[name];
+  // 5.2 地点块（两层结构：current + candidate）
+  
+  // 5.2.1 当前地点（完整注入）
+  if (effectiveCurrentLocation) {
+    const ent = entitiesByName.get(effectiveCurrentLocation);
+    const bundle = bundles[effectiveCurrentLocation];
     const baseinfo = ent?.baseinfo || "";
+    const parentLocation = ent?.parentLocation || "";
 
-    lines.push(`<Location_${locIndex}>`);
-    lines.push(`  Location: ${name}`);
+    lines.push("<Location_Current>");
+    lines.push(`  location: ${effectiveCurrentLocation}`);
+    lines.push(`  layer: current`);
+    
+    // 注入父地点信息（如果存在）
+    if (parentLocation) {
+      lines.push(`  parent_location: ${parentLocation}`);
+    }
+    
     lines.push(`  baseinfo: ${baseinfo}`);
     
     if (bundle && Object.keys(bundle.byPromptType).length > 0) {
@@ -385,9 +383,37 @@ export async function buildPromptInjectionBlock(engineState) {
       }
     }
     
-    lines.push(`</Location_${locIndex}>`);
+    lines.push("</Location_Current>");
     lines.push("");
-    locIndex += 1;
+  }
+  
+  // 5.2.2 候选地点（注入名称 + 简短提示 + 父地点）
+  if (candidateLocations.length > 0) {
+    lines.push("<Location_Candidates>");
+    for (const name of candidateLocations) {
+      const ent = entitiesByName.get(name);
+      
+      if (ent && ent.type === "location") {
+        // 实体存在：使用 candidateHint（如果有）+ 父地点信息
+        const hint = ent.candidateHint || "";
+        const parentLocation = ent.parentLocation || "";
+        
+        // 构建候选地点条目
+        let candidateEntry = `  - ${name}`;
+        if (parentLocation) {
+          candidateEntry += ` (位于: ${parentLocation})`;
+        }
+        if (hint) {
+          candidateEntry += `: ${hint}`;
+        }
+        lines.push(candidateEntry);
+      } else {
+        // 未知地点：仅名称
+        lines.push(`  - ${name}`);
+      }
+    }
+    lines.push("</Location_Candidates>");
+    lines.push("");
   }
 
   return lines.join("\n");

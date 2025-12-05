@@ -1,0 +1,174 @@
+/* ===========================
+ * 响应式布局样式
+ * =========================== */
+
+/* 观察器专用：移动端适配 - 参考 variables-panel */
+@media (max-width: 999px) {
+  .ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar {
+    width: 100% !important;
+    max-width: 100vw;
+    min-width: unset;
+    max-height: calc(100svh - var(--topBarBlockSize));
+    top: var(--topBarBlockSize);
+    height: calc(100vh - var(--topBarBlockSize)) !important;
+  }
+  
+  .ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar {
+    width: 100% !important;
+    max-width: 100vw;
+    min-width: unset;
+    max-height: calc(100svh - var(--topBarBlockSize));
+    top: var(--topBarBlockSize);
+    height: calc(100vh - var(--topBarBlockSize)) !important;
+  }
+}
+
+/* 观察器专用：大屏幕下的侧边栏宽度优化 */
+@media (min-width: 1000px) {
+  .ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar {
+    width: calc((100vw - var(--sheldWidth, 0px)) / 2) !important;
+  }
+  
+  .ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar {
+    width: calc((100vw - var(--sheldWidth, 0px)) / 2) !important;
+  }
+}
+
+/* 窄屏 / 手机模式下的适配：
+ * - 弹窗撑满宽度，并贴合上下边缘，由于父级使用 flex 居中，仍然在视口中间；
+ * - 去掉大圆角，避免在小屏上显得"悬空"。 */
+@media (max-width: 768px) {
+  .ce-modal {
+    width: 100vw;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}
+
+/* ===========================
+ * 窄模式响应式布局
+ * 适用于侧边栏模式和手机浏览器
+ * =========================== */
+
+/* 窄模式判断：侧边栏模式或窄屏幕 */
+@media (max-width: 768px) {
+  /* 参数面板：窄模式下垂直堆叠
+   * 第一行：名称 + ID
+   * 第二行：类型 + 作用域
+   * 第三行：说明
+   * 第四行：参数设置
+   */
+  .ce-parameters-container .ce-form-row-multi {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .ce-parameters-container .ce-form-row-multi > * {
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+  
+  /* 实体面板：窄模式下垂直堆叠
+   * 每个字段独占一行
+   */
+  .ce-entities-container .ce-form-row-multi {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .ce-entities-container .ce-form-row-multi > * {
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+  
+  /* 横向表单行在窄模式下也改为垂直 */
+  .ce-form-row-horizontal {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .ce-form-row-horizontal label {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .ce-form-row-horizontal .ce-form-label {
+    margin-bottom: 4px;
+  }
+}
+
+/* 侧边栏模式专用：编辑器在右侧边栏时 */
+.ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar .ce-parameters-container .ce-form-row-multi,
+.ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar .ce-entities-container .ce-form-row-multi {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar .ce-parameters-container .ce-form-row-multi > *,
+.ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar .ce-entities-container .ce-form-row-multi > * {
+  flex: 1 1 100%;
+  min-width: 100%;
+}
+
+.ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar .ce-form-row-horizontal {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar .ce-form-row-horizontal label {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar .ce-form-row-horizontal .ce-form-label {
+  margin-bottom: 4px;
+}
+
+/* 侧边栏模式专用：观察器在左侧边栏时 */
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-parameters-container .ce-form-row-multi,
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-entities-container .ce-form-row-multi {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-parameters-container .ce-form-row-multi > *,
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-entities-container .ce-form-row-multi > * {
+  flex: 1 1 100%;
+  min-width: 100%;
+}
+
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-form-row-horizontal {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-form-row-horizontal label {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-form-row-horizontal .ce-form-label {
+  margin-bottom: 4px;
+}
+
+/* 窄屏/手机模式：改为单列布局 */
+@media (max-width: 1024px) {
+  .ce-lore-manager-layout {
+    flex-direction: column;
+  }
+  
+  .ce-lore-manager-left,
+  .ce-lore-manager-right {
+    flex: 1 1 100%;
+  }
+}
+
+/* RAG模态窗口专用：在侧边栏模式下也使用单列 */
+.ce-modal-backdrop[data-ce-rag-root] .ce-modal-sidebar .ce-lore-manager-layout {
+  flex-direction: column;
+}
+
+.ce-modal-backdrop[data-ce-rag-root] .ce-modal-sidebar .ce-lore-manager-left,
+.ce-modal-backdrop[data-ce-rag-root] .ce-modal-sidebar .ce-lore-manager-right {
+  flex: 1 1 100%;
+}
