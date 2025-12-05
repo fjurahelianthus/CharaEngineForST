@@ -18,7 +18,7 @@ import {
 import { parseModelOutput } from "../integration/state-parser.js";
 import { applyChangeSet } from "../core/engine-state.js";
 
-const EXT_ID = "CharacterEngine";
+const EXT_ID = "CharaEngineForST";
 
 /**
  * generate_interceptor 入口
@@ -32,9 +32,42 @@ const EXT_ID = "CharacterEngine";
  * @param {string} type - 生成类型（quiet/regenerate/impersonate/...）
  */
 export async function ceGenerateInterceptor(chat, contextSize, abort, type) {
-  const settings = extension_settings[EXT_ID] || {};
+  // ⭐ 最早的日志输出，确认拦截器被调用
+  logDebug("━━━━━━ 拦截器被调用 ━━━━━━", {
+    chatLength: chat?.length,
+    contextSize,
+    type: type || 'normal'
+  });
   
+  const settings = extension_settings[EXT_ID] || {};
+  logDebug("插件设置:", {
+    enabled: settings.enabled,
+    useIndependentRag: settings.useIndependentRag,
+    useWorldRag: settings.useWorldRag
+  });
+  
+  // 步骤 0: 独立恒定RAG检索（即使角色引擎关闭也可以使用）
+  const charConfig = getConfigForCurrentCharacter();
+  logDebug("角色配置:", {
+    hasConfig: !!charConfig,
+    hasLoreConfig: !!charConfig?.loreConfig
+  });
+  
+  const independentRagBlock = await buildIndependentRagBlock(chat, charConfig, settings);
+  logDebug("独立RAG块:", {
+    hasBlock: !!independentRagBlock,
+    length: independentRagBlock?.length || 0
+  });
+  
+  // 如果角色引擎未启用，只注入独立RAG（如果有）
   if (!settings.enabled) {
+    logDebug("角色引擎已关闭");
+    if (independentRagBlock) {
+      injectPromptToChat(chat, independentRagBlock);
+      logDebug("已注入独立恒定RAG");
+    } else {
+      logDebug("没有独立RAG内容可注入");
+    }
     return;
   }
 
@@ -42,13 +75,13 @@ export async function ceGenerateInterceptor(chat, contextSize, abort, type) {
     const ctx = getContext?.() || {};
     const targetIndex = chat.length - 1;
 
-    // 步骤 0: 处理 greeting 中的 <CE_Init> ... ce.set(...) ... </CE_Init>
+    // 步骤 1: 处理 greeting 中的 <CE_Init> ... ce.set(...) ... </CE_Init>
     applyCeInitFromGreeting(chat);
 
-    // 步骤 1: 检查是否已有 ChangeSet（会自动验证内容哈希和分支）
+    // 步骤 2: 检查是否已有 ChangeSet（会自动验证内容哈希和分支）
     let parseChangeSet = getChangeSetForIndex(targetIndex);
     
-    // 步骤 2: 判断是否需要解析
+    // 步骤 3: 判断是否需要解析
     // 定义明确不需要解析的类型（黑名单策略）
     const SKIP_PARSE_TYPES = new Set(['quiet', 'impersonate']);
     const hasValidCache = !!parseChangeSet;
@@ -83,14 +116,10 @@ export async function ceGenerateInterceptor(chat, contextSize, abort, type) {
       logDebug(`跳过解析（type=${type}），且无已存储的 ChangeSet`);
     }
 
-    // 步骤 3: 构建当前状态（包含本轮 ChangeSet）
+    // 步骤 4: 构建当前状态（包含本轮 ChangeSet）
     const engineState = buildCurrentEngineState(chat, parseChangeSet);
 
-    // 步骤 3.5: 独立RAG检索（如果启用）
-    const charConfig = getConfigForCurrentCharacter();
-    const independentRagBlock = await buildIndependentRagBlock(chat, charConfig);
-
-    // 步骤 4: 构造并注入提示（支持异步RAG）
+    // 步骤 5: 构造并注入提示（支持异步RAG）
     const injectionText = await buildPromptInjectionBlock(engineState);
 
     // 合并独立RAG和常规提示
@@ -102,7 +131,7 @@ export async function ceGenerateInterceptor(chat, contextSize, abort, type) {
       injectPromptToChat(chat, finalInjectionText);
     }
 
-    // 步骤 5: 更新 checkpoint（如果有新的 ChangeSet）
+    // 步骤 6: 更新 checkpoint（如果有新的 ChangeSet）
     if (parseChangeSet) {
       await setCheckpoint(targetIndex, engineState);
       logDebug(`checkpoint 已更新到索引 ${targetIndex}`);
@@ -190,6 +219,7 @@ function buildCurrentEngineState(chat, parseChangeSet) {
 
 /**
  * 将提示注入块插入到 chat 中
+ * 注入位置：上一条AI回复的前面（如果存在），否则注入到最后一条消息前面
  * @param {Array} chat
  * @param {string} injectionText
  */
@@ -200,8 +230,23 @@ function injectPromptToChat(chat, injectionText) {
     send_date: Date.now(),
     mes: injectionText
   };
-  const insertIndex = Math.max(chat.length - 1, 0);
+  
+  // 查找上一条AI回复的位置
+  let insertIndex = chat.length - 1; // 默认插入到最后一条消息前面
+  
+  // 从倒数第二条消息开始向前查找第一条AI消息
+  for (let i = chat.length - 2; i >= 0; i--) {
+    const msg = chat[i];
+    if (msg && !msg.is_user) {
+      // 找到上一条AI回复，插入到它前面
+      insertIndex = i;
+      break;
+    }
+  }
+  
   chat.splice(insertIndex, 0, systemNote);
+  
+  logDebug(`提示注入位置: 索引 ${insertIndex} (共 ${chat.length} 条消息)`);
 }
 
 /**
@@ -219,6 +264,7 @@ function handleInterceptorError(err) {
   // 其它异常：不阻断主流程，直接放行
   // eslint-disable-next-line no-console
   console.error("[CharacterEngine] 拦截 generate 时发生错误，将不修改本轮提示", err);
+}
 
 /**
  * 构建独立RAG块
@@ -226,14 +272,8 @@ function handleInterceptorError(err) {
  * @param {Object} charConfig - 角色配置
  * @returns {Promise<string>}
  */
-async function buildIndependentRagBlock(chat, charConfig) {
-  // 检查全局开关是否启用独立RAG
-  const settings = extension_settings[EXT_ID] || {};
-  if (!settings.useIndependentRag) {
-    return '';
-  }
-
-  // 检查是否有loreConfig
+async function buildIndependentRagBlock(chat, charConfig, settings) {
+  // 检查是否有loreConfig（开关检查在 independent-rag-retriever 内部进行）
   const loreConfig = charConfig?.loreConfig;
   if (!loreConfig) {
     return '';
@@ -272,7 +312,6 @@ async function buildIndependentRagBlock(chat, charConfig) {
     console.error('[Interceptor] 独立RAG注入失败:', err);
     return '';
   }
-}
 }
 
 /**

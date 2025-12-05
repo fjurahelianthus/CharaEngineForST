@@ -79,6 +79,12 @@ export async function performIndependentRagRetrieval(userInput, lastAiReply, lor
     ) : [];
 
     console.log(`[Independent RAG] 提取查询: 用户${userQueries.length}条, AI${aiQueries.length}条`);
+    
+    // 如果没有提取到任何查询，返回空结果
+    if (userQueries.length === 0 && aiQueries.length === 0) {
+      console.log('[Independent RAG] 没有提取到有效查询');
+      return createEmptyResult();
+    }
 
     // 3. 执行检索
     const userResults = await retrieveForQueries(
@@ -212,6 +218,23 @@ async function smartSplit(text) {
 }
 
 /**
+ * 估算文本的Token数量（粗略估算）
+ * @param {string} text - 文本内容
+ * @returns {number}
+ */
+function estimateTokenCount(text) {
+  if (!text || typeof text !== 'string') {
+    return 0;
+  }
+  
+  // 粗略估算：中文约1.5字符/token，英文约4字符/token
+  const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+  const otherChars = text.length - chineseChars;
+  
+  return Math.ceil(chineseChars / 1.5 + otherChars / 4);
+}
+
+/**
  * 对查询列表执行检索
  * @param {Array<string>} queries
  * @param {Array<Object>} collections
@@ -277,13 +300,18 @@ async function retrieveForQueries(queries, collections, loreConfig, weight, topK
       );
     }
 
-    // 添加权重和来源标记
-    const weightedResults = queryResults.map(r => ({
-      ...r,
-      weight,
-      sourceQuery: query,
-      sourceType: weight >= 1.0 ? 'user' : 'ai'  // ⭐ 修复：使用权重判断而非硬编码比较
-    }));
+    // 添加权重和来源标记，并计算token数
+    const weightedResults = queryResults.map(r => {
+      const text = r.chunk?.text || '';
+      const tokens = estimateTokenCount(text);
+      return {
+        ...r,
+        weight,
+        sourceQuery: query,
+        sourceType: weight >= 1.0 ? 'user' : 'ai',
+        estimatedTokens: tokens
+      };
+    });
 
     allResults.push(...weightedResults);
   }

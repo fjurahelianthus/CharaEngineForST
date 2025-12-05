@@ -73,7 +73,7 @@ function formatIndependentRagResults(results) {
       const text = chunk.text || '';
       const score = result.similarity || result.keywordScore || result.fusionScore || 0;
 
-      lines.push(`### ${docTitle} (相关度: ${(score * 100).toFixed(1)}%)`);
+      lines.push(`### ${docTitle} (相关度: ${score.toFixed(3)})`);
       lines.push(text);
       lines.push('');
     }
@@ -91,7 +91,7 @@ function formatIndependentRagResults(results) {
       const text = chunk.text || '';
       const score = result.similarity || result.keywordScore || result.fusionScore || 0;
 
-      lines.push(`### ${docTitle} (相关度: ${(score * 100).toFixed(1)}%)`);
+      lines.push(`### ${docTitle} (相关度: ${score.toFixed(3)})`);
       lines.push(text);
       lines.push('');
     }

@@ -9,7 +9,7 @@ import { extension_settings } from "../../../../extensions.js";
 import { getCallGenerateService } from "../services/call-generate.js";
 import { parseVariablePath } from "../core/variables.js";
 
-const EXT_ID = "CharacterEngine";
+const EXT_ID = "CharaEngineForST";
 
 /**
  * 构建解析模型所需的 quietPrompt。
