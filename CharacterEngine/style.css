@@ -1,0 +1,2093 @@
+/* 角色引擎扩展基础样式 */
+
+/* 设置面板局部微调 */
+.ce-settings-root .section-divider {
+  font-size: 0.8em;
+  color: #8f8f8f;
+  margin: 0.5em 0 0.3em;
+  letter-spacing: 0.05em;
+}
+
+.ce-settings-root label {
+  margin-top: 0.2em;
+}
+
+.ce-settings-root input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+/* 设置面板：作者工具按钮行，强制单行横向排列 */
+.ce-settings-root .ce-settings-button-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 防止按钮在行内被压缩换行 */
+.ce-settings-root .ce-settings-button-row .menu_button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* 调试面板容器（暂未实现逻辑，用于预留位置） */
+.ce-debug-panel {
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--SmartThemeBorderColor, #333);
+  background-color: var(--SmartThemeBlurTintColor, #1e1e1e);
+  font-size: 0.85em;
+  max-height: 260px;
+  overflow: auto;
+}
+
+.ce-debug-panel-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--SmartThemeBodyColor, #e9e9e9);
+}
+
+.ce-debug-panel-section {
+  margin-top: 4px;
+}
+
+.ce-debug-panel-section-title {
+  font-weight: 500;
+  color: #bbb;
+  margin-bottom: 2px;
+}
+
+.ce-debug-panel-kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+}
+
+.ce-debug-panel-kv-key {
+  color: #aaa;
+  flex: 0 0 auto;
+}
+
+.ce-debug-panel-kv-value {
+  color: #ddd;
+  flex: 1 1 auto;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 将来用于显示 cast 层级的小标签 */
+.ce-cast-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 0.75em;
+  margin-right: 4px;
+  border: 1px solid var(--SmartThemeBorderColor, #444);
+}
+
+.ce-cast-badge-focus {
+  background-color: rgba(46, 204, 113, 0.18);
+  color: #2ecc71;
+}
+
+.ce-cast-badge-supporting {
+  background-color: rgba(52, 152, 219, 0.18);
+  color: #3498db;
+}
+
+.ce-cast-badge-offstage {
+  background-color: rgba(155, 89, 182, 0.14);
+  color: #9b59b6;
+}
+
+/* 小的提示文字 */
+.ce-hint {
+  font-size: 0.8em;
+  color: #888;
+  margin-top: 4px;
+}
+
+/* ===========================
+ * 角色引擎：编辑器弹窗样式
+ * =========================== */
+
+.ce-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999; /* 提高到最上层，高于所有其他元素 */
+  background: rgba(0, 0, 0, 0.5); /* 编辑器使用半透明背景遮罩 */
+  display: none;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+/* 观察器专用：侧边栏模式的背景保持穿透 */
+.ce-modal-backdrop[data-ce-state-observer-root] {
+  background: transparent;
+  pointer-events: none;
+}
+
+.ce-modal-backdrop-sidebar {
+  pointer-events: none;
+}
+
+.ce-modal {
+  position: relative; /* 编辑器使用相对定位，配合 backdrop 的 flex 居中 */
+  width: min(960px, 96vw);
+  max-height: 90vh;
+  background: var(--SmartThemeBlurTintColor, #202020);
+  border-radius: 10px;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: auto; /* 弹窗本身可交互 */
+  color: var(--SmartThemeBodyColor); /* 使用ST主题颜色 */
+}
+
+/* 观察器专用：默认半透明效果 */
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal:hover {
+  opacity: 1;
+}
+
+/* 大尺寸模态框（用于状态观察器） */
+.ce-modal-large {
+  width: min(1200px, 98vw);
+  max-height: 95vh;
+}
+
+/* 小尺寸模态框（用于进度提示等） */
+.ce-modal-small {
+  width: min(500px, 90vw);
+  max-height: 70vh;
+}
+
+/* 观察器专用：可拖动模态框 */
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-draggable {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  resize: both; /* 允许浏览器原生缩放（备用） */
+}
+
+/* 观察器专用：侧边栏模式 - 参考 variables-panel 的设计，改为左侧显示 */
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0; /* 改为左侧 */
+  bottom: 0;
+  right: auto;
+  width: calc((100vw - var(--sheldWidth)) / 2) !important; /* 响应式宽度 */
+  max-width: 80vw;
+  min-width: 400px; /* 最小宽度保证可用性 */
+  height: 100vh !important;
+  max-height: 100vh !important;
+  border-radius: 0;
+  border-left: none; /* 左侧无边框 */
+  border-right: 1px solid var(--SmartThemeBorderColor); /* 右侧边框 */
+  transform: none !important;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.5); /* 右侧阴影 */
+}
+
+/* 编辑器专用：右侧边栏模式 */
+.ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0; /* 右侧显示 */
+  bottom: 0;
+  left: auto;
+  width: calc((100vw - var(--sheldWidth)) / 2) !important; /* 响应式宽度 */
+  max-width: 80vw;
+  min-width: 400px; /* 最小宽度保证可用性 */
+  height: 100vh !important;
+  max-height: 100vh !important;
+  border-radius: 0;
+  border-right: none; /* 右侧无边框 */
+  border-left: 1px solid var(--SmartThemeBorderColor); /* 左侧边框 */
+  transform: none !important;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.5); /* 左侧阴影 */
+}
+
+/* 编辑器侧边栏模式：背景穿透 */
+.ce-modal-backdrop[data-ce-editor-root].ce-modal-backdrop-sidebar {
+  background: transparent;
+  pointer-events: none;
+}
+
+.ce-modal-backdrop[data-ce-editor-root].ce-modal-backdrop-sidebar .ce-modal {
+  pointer-events: auto;
+}
+
+/* 观察器专用：移动端适配 - 参考 variables-panel */
+@media (max-width: 999px) {
+  .ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar {
+    width: 100% !important;
+    max-width: 100vw;
+    min-width: unset;
+    max-height: calc(100svh - var(--topBarBlockSize));
+    top: var(--topBarBlockSize);
+    height: calc(100vh - var(--topBarBlockSize)) !important;
+  }
+  
+  .ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar {
+    width: 100% !important;
+    max-width: 100vw;
+    min-width: unset;
+    max-height: calc(100svh - var(--topBarBlockSize));
+    top: var(--topBarBlockSize);
+    height: calc(100vh - var(--topBarBlockSize)) !important;
+  }
+}
+
+/* 观察器专用：大屏幕下的侧边栏宽度优化 */
+@media (min-width: 1000px) {
+  .ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar {
+    width: calc((100vw - var(--sheldWidth, 0px)) / 2) !important;
+  }
+  
+  .ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar {
+    width: calc((100vw - var(--sheldWidth, 0px)) / 2) !important;
+  }
+}
+
+/* 窄屏 / 手机模式下的适配：
+ * - 弹窗撑满宽度，并贴合上下边缘，由于父级使用 flex 居中，仍然在视口中间；
+ * - 去掉大圆角，避免在小屏上显得“悬空”。 */
+@media (max-width: 768px) {
+  .ce-modal {
+    width: 100vw;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}
+
+/* 未选择角色卡时的错误高亮样式 */
+.ce-modal.ce-modal-error {
+  border-color: #e74c3c;
+  box-shadow: 0 0 22px rgba(231, 76, 60, 0.8);
+}
+
+/* 未选择角色卡时的锁定遮罩层 */
+.ce-modal-locked-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  background: rgba(0, 0, 0, 0.78);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+/* 锁定提示内容盒子 */
+.ce-locked-box {
+  max-width: 520px;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #e74c3c;
+  background: rgba(30, 0, 0, 0.95);
+  box-shadow: 0 0 18px rgba(231, 76, 60, 0.7);
+  padding: 16px 18px;
+  text-align: center;
+}
+
+.ce-locked-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffdddd;
+  margin-bottom: 8px;
+}
+
+.ce-locked-message {
+  font-size: 0.9rem;
+  color: #ffd7d7;
+  margin-bottom: 6px;
+}
+
+.ce-locked-hint {
+  font-size: 0.8rem;
+  color: #ffaaaa;
+}
+
+.ce-modal-header {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px; /* 参考 variables-panel 的 padding */
+  border-bottom: 0.5px solid var(--SmartThemeBorderColor, #444); /* 更细的边框 */
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* 观察器专用：可拖动的标题栏 */
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-draggable-handle {
+  cursor: move;
+  user-select: none;
+}
+
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-draggable-handle {
+  cursor: default; /* 侧边栏模式不可拖动 */
+}
+
+.ce-modal-title {
+  font-weight: bold; /* 参考 variables-panel */
+  font-size: 16px; /* 参考 variables-panel */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 观察器专用：拖动指示器 */
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-drag-indicator {
+  font-size: 0.9rem;
+  color: #666;
+  letter-spacing: -2px;
+}
+
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-drag-indicator {
+  display: none; /* 侧边栏模式隐藏拖动指示器 */
+}
+
+/* 标题栏操作按钮组 */
+.ce-modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ce-modal-action-btn {
+  border: none;
+  background: transparent;
+  color: var(--SmartThemeBodyColor, #e9e9e9);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.ce-modal-action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ce-sidebar-icon {
+  display: inline-block;
+  font-size: 1.1rem;
+}
+
+.ce-modal-close {
+  border: none;
+  background: transparent;
+  color: var(--SmartThemeBodyColor, #e9e9e9);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.ce-modal-close:hover {
+  background: rgba(255, 100, 100, 0.2);
+  color: #ff6666;
+}
+
+.ce-modal-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px 0;
+  border-bottom: 5px solid var(--SmartThemeBorderColor, #333); /* 更粗的底部边框 */
+}
+
+.ce-tab-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 5px 15px; /* 参考 variables-panel 的 section-header padding */
+  border-radius: 6px 6px 0 0;
+  font-size: 14px; /* 参考 variables-panel */
+  color: var(--SmartThemeEmColor, #ddd); /* 使用强调色 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ce-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ce-tab-btn-active {
+  background: rgba(255, 255, 255, 0.08);
+  border-bottom: 2px solid var(--SmartThemeAccentColor, #3fa9f5);
+}
+
+.ce-modal-body {
+  padding: 10px; /* 参考 variables-panel 的 list padding */
+  overflow-y: auto; /* 明确垂直滚动 */
+  flex: 1;
+}
+
+/* 滚动条样式 - 参考 variables-panel */
+.ce-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ce-modal-body::-webkit-scrollbar-track {
+  background: var(--SmartThemeBodyColor);
+}
+
+.ce-modal-body::-webkit-scrollbar-thumb {
+  background: var(--SmartThemeBorderColor);
+  border-radius: 3px;
+}
+
+.ce-modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--SmartThemeQuoteColor);
+}
+
+.ce-modal-footer {
+  padding: 8px 10px;
+  border-top: 1px solid var(--SmartThemeBorderColor, #333);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ce-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.ce-section-header span {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* 按钮微调，复用 ST 的 .menu_button 外观时不破坏布局 */
+.ce-btn {
+  border-radius: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--SmartThemeBodyColor, #eee);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.ce-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ce-btn-secondary {
+  background: transparent;
+}
+
+.ce-btn-small {
+  font-size: 0.8rem;
+  padding: 3px 8px;
+}
+
+/* 表格样式 */
+.ce-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.ce-table th,
+.ce-table td {
+  border: 1px solid var(--SmartThemeBorderColor, #444);
+  padding: 4px 6px;
+  vertical-align: top;
+}
+
+/* 实体编辑表格：列宽微调
+ * - 第 2 列（类型）适当加宽；
+ * - 第 3 列（内部ID）变窄，避免占用过多空间。 */
+.ce-table[data-ce-table="entities"] th:nth-child(2),
+.ce-table[data-ce-table="entities"] td:nth-child(2) {
+  width: 120px;
+  white-space: nowrap;
+}
+
+.ce-table[data-ce-table="entities"] th:nth-child(3),
+.ce-table[data-ce-table="entities"] td:nth-child(3) {
+  width: 110px;
+  white-space: nowrap;
+}
+
+/* 实体编辑表格：结构与关联区域
+ * - label 与输入框同一行展示；
+ * - 输入框占据剩余空间。 */
+.ce-entity-relations {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ce-entity-relations label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.ce-entity-relations label input[type="text"] {
+  flex: 1 1 auto;
+  width: auto;
+}
+
+.ce-entity-relations-disabled {
+  opacity: 0.8;
+}
+
+.ce-table th {
+  background: rgba(0, 0, 0, 0.35);
+  font-weight: 500;
+}
+
+.ce-table input[type="text"],
+.ce-table input[type="number"],
+.ce-table select,
+.ce-table textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+}
+
+/* 条件格式错误时的红框高亮 */
+.ce-table textarea.ce-input-error {
+  border-color: #e74c3c;
+  box-shadow: 0 0 4px rgba(231, 76, 60, 0.7);
+}
+
+/* 占位符颜色，避免在深色背景下太浅看不清 */
+.ce-table input[type="text"]::placeholder,
+.ce-table input[type="number"]::placeholder,
+.ce-table textarea::placeholder {
+  color: #aaaaaa;
+}
+
+/* 提示条目面板工具条 */
+.ce-prompts-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.ce-prompts-toolbar input[type="text"] {
+  width: 180px;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+}
+
+/* 提示条目筛选输入框占位符颜色 */
+.ce-prompts-toolbar input[type="text"]::placeholder {
+  color: #aaaaaa;
+}
+
+/* 提示条目主行：拖拽 + 折叠样式 */
+.ce-prompt-toggle-cell {
+  width: 24px;
+  text-align: center;
+  vertical-align: top;
+}
+
+.ce-prompt-toggle {
+  padding: 0 4px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* 主行支持拖拽时的鼠标样式 */
+.ce-table tr[data-ce-prompt-row="main"] {
+  cursor: move;
+}
+
+/* 拖拽目标高亮 */
+.ce-table tr.ce-prompt-row-drop-target {
+  outline: 2px dashed var(--SmartThemeAccentColor, #3fa9f5);
+  background-color: rgba(63, 169, 245, 0.12);
+}
+
+/* 详细/紧凑视图切换 */
+.ce-prompt-full {
+  display: block;
+}
+
+.ce-prompt-compact {
+  display: none;
+  gap: 4px;
+  align-items: center;
+}
+
+/* 折叠状态：隐藏详细区域，仅显示紧凑单行 */
+.ce-table tr.ce-prompt-row-collapsed .ce-prompt-full {
+  display: none;
+}
+
+.ce-table tr.ce-prompt-row-collapsed .ce-prompt-compact {
+  display: flex;
+}
+
+/* 紧凑视图中的单行文本框：不可拉高，超出省略 */
+.ce-prompt-compact input[type="text"] {
+  width: 100%;
+  resize: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 角色选项布局 */
+.ce-form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ce-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ce-checkbox-row input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.ce-small-hint {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 2px;
+}
+/* 参数编辑器：数值范围 / 枚举 输入区域样式 */
+.ce-range-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ce-input-number-small {
+  max-width: 70px;
+  width: 70px;
+  box-sizing: border-box;
+}
+
+/* 分隔符视觉弱化，避免抢占注意力 */
+.ce-range-sep {
+  padding: 0 2px;
+  color: #888;
+  font-size: 0.85em;
+}
+
+/* 布尔型参数的固定提示文案 */
+.ce-param-boolean-hint {
+  font-size: 0.85em;
+  color: #888;
+}
+
+/* ===========================
+ * 缩放手柄样式
+ * =========================== */
+
+.ce-resize-handle {
+  position: absolute;
+  background: transparent;
+  z-index: 10;
+}
+
+.ce-resize-handle-se {
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+}
+
+.ce-resize-handle-e {
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 60%;
+  cursor: ew-resize;
+}
+
+.ce-resize-handle-s {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 8px;
+  cursor: ns-resize;
+}
+
+/* 观察器专用：侧边栏模式隐藏缩放手柄 */
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-resize-handle {
+  display: none;
+}
+
+/* 缩放手柄悬停效果 */
+.ce-resize-handle:hover {
+  background: rgba(63, 169, 245, 0.3);
+}
+
+.ce-resize-handle-se:hover::after {
+  content: "⋰";
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  font-size: 12px;
+  color: var(--SmartThemeAccentColor, #3fa9f5);
+}
+
+/* ===========================
+ * 楼层选择器样式
+ * =========================== */
+
+.ce-floor-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px; /* 参考 variables-panel 的 search-container padding */
+  border-bottom: 1px solid var(--SmartThemeBorderColor, #333);
+  background: rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+}
+
+.ce-floor-selector label {
+  font-size: 0.85rem;
+  color: var(--SmartThemeBodyColor, #ddd);
+  white-space: nowrap;
+}
+
+.ce-floor-selector input[type="number"] {
+  background-color: var(--SmartThemeChatTintColor, #202020); /* 使用ST主题变量 */
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  border-radius: 3px; /* 参考 variables-panel */
+  padding: 3px 6px; /* 参考 variables-panel */
+  font-size: 12px; /* 参考 variables-panel */
+}
+
+.ce-floor-selector input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+}
+
+#ce-floor-total {
+  font-size: 0.85rem;
+  color: #888;
+  margin-left: -4px;
+}
+
+/* ===========================
+ * 时间线视图样式
+ * =========================== */
+
+.ce-timeline-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ce-timeline-section {
+  border: 1px solid var(--SmartThemeBorderColor, #444);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  opacity: 0.7; /* 参考 variables-panel 的 item 默认透明度 */
+}
+
+.ce-timeline-section:hover {
+  opacity: 1; /* 悬停时完全不透明 */
+}
+
+.ce-timeline-section-title {
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.3);
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--SmartThemeAccentColor, #3fa9f5);
+  border-bottom: 1px solid var(--SmartThemeBorderColor, #444);
+}
+
+.ce-timeline-content {
+  padding: 8px 10px;
+}
+
+/* 解析输出子区块 */
+.ce-parse-subsection {
+  margin-top: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ce-parse-subsection:first-child {
+  margin-top: 0;
+}
+
+.ce-parse-subsection-title {
+  padding: 4px 8px;
+  background: rgba(63, 169, 245, 0.15);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #3fa9f5;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 紧凑表格样式（用于时间线视图） */
+.ce-table-compact {
+  font-size: 0.8rem;
+}
+
+.ce-table-compact th,
+.ce-table-compact td {
+  padding: 3px 5px;
+}
+
+/* 状态变化项 */
+.ce-state-change-item {
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  border-left: 3px solid var(--SmartThemeAccentColor, #3fa9f5);
+  background: rgba(63, 169, 245, 0.08);
+  border-radius: 2px;
+}
+
+.ce-state-change-item:last-child {
+  margin-bottom: 0;
+}
+
+.ce-state-change-item strong {
+  color: var(--SmartThemeAccentColor, #3fa9f5);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.ce-state-change-item div {
+  font-size: 0.85rem;
+  color: #ddd;
+  margin-top: 2px;
+}
+
+/* ===========================
+ * 折叠卡片列表样式
+ * =========================== */
+
+/* 折叠卡片容器 */
+.ce-parameters-container,
+.ce-prompt-types-container,
+.ce-entities-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 折叠卡片 */
+.ce-collapsible-card {
+  border: 1px solid var(--SmartThemeBorderColor, #444);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.ce-collapsible-card:hover {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+}
+
+/* 折叠卡片头部 */
+.ce-collapsible-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid transparent;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ce-collapsible-card-header:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* 拖拽手柄 */
+.ce-drag-handle {
+  color: #666;
+  cursor: move;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.ce-drag-handle:hover {
+  color: var(--SmartThemeAccentColor, #3fa9f5);
+}
+
+/* 折叠按钮 */
+.ce-collapsible-toggle {
+  color: var(--SmartThemeAccentColor, #3fa9f5);
+  font-size: 1rem;
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+
+.ce-collapsible-toggle:hover {
+  color: var(--SmartThemeEmColor, #5bc0de);
+}
+
+/* 折叠卡片内容 */
+.ce-collapsible-card-content {
+  padding: 10px;
+  border-top: 1px solid var(--SmartThemeBorderColor, #444);
+}
+
+/* 头部内容区域 */
+.ce-collapsible-header-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 标题 */
+.ce-collapsible-title {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--SmartThemeBodyColor, #eee);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 徽章 */
+.ce-collapsible-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  background: rgba(63, 169, 245, 0.2);
+  color: var(--SmartThemeAccentColor, #3fa9f5);
+  border: 1px solid rgba(63, 169, 245, 0.3);
+  white-space: nowrap;
+}
+
+/* 主体内容区域 */
+.ce-collapsible-body-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 表单行 */
+.ce-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ce-form-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.ce-form-label {
+  font-weight: 500;
+  color: var(--SmartThemeEmColor, #ddd);
+  font-size: 0.85rem;
+}
+
+/* 横向表单行 - 标签和输入框在同一行 */
+.ce-form-row-horizontal {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.ce-form-row-horizontal label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ce-form-row-horizontal .ce-form-label {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ce-form-row-horizontal input[type="text"],
+.ce-form-row-horizontal input[type="number"],
+.ce-form-row-horizontal select {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  padding: 4px 6px;
+  border-radius: 3px;
+}
+
+.ce-form-row-horizontal input[type="text"]:focus,
+.ce-form-row-horizontal input[type="number"]:focus,
+.ce-form-row-horizontal select:focus {
+  outline: none;
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+  box-shadow: 0 0 0 2px rgba(63, 169, 245, 0.2);
+}
+
+/* 多列布局 - 用于将多个字段放在同一行 */
+.ce-form-row-multi {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ce-form-row-multi > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.ce-form-row-multi label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.ce-form-row-multi .ce-form-label {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ce-form-row-multi input[type="text"],
+.ce-form-row-multi input[type="number"],
+.ce-form-row-multi select {
+  flex: 1;
+  min-width: 60px;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  padding: 4px 6px;
+  border-radius: 3px;
+}
+
+.ce-form-row-multi input[type="text"]:focus,
+.ce-form-row-multi input[type="number"]:focus,
+.ce-form-row-multi select:focus {
+  outline: none;
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+  box-shadow: 0 0 0 2px rgba(63, 169, 245, 0.2);
+}
+
+.ce-form-row input[type="text"],
+.ce-form-row input[type="number"],
+.ce-form-row select,
+.ce-form-row textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  padding: 4px 6px;
+  border-radius: 3px;
+}
+
+.ce-form-row input[type="text"]:focus,
+.ce-form-row input[type="number"]:focus,
+.ce-form-row select:focus,
+.ce-form-row textarea:focus {
+  outline: none;
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+  box-shadow: 0 0 0 2px rgba(63, 169, 245, 0.2);
+}
+
+/* 拖拽状态 */
+.ce-dragging {
+  opacity: 0.5;
+  cursor: move;
+}
+
+.ce-drag-over {
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+  box-shadow: 0 0 8px rgba(63, 169, 245, 0.5);
+  background: rgba(63, 169, 245, 0.1);
+}
+
+/* 实体面板特殊样式 */
+.ce-entity-cast-section {
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* ===========================
+ * 提示条目面板特殊样式
+ * =========================== */
+
+.ce-prompts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ce-collapsible-hint {
+  font-size: 0.75rem;
+  color: #888;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ce-conditions-error-list {
+  margin-top: 4px;
+}
+
+/* ===========================
+ * 初始参数面板卡片样式
+ * =========================== */
+
+.ce-initial-params-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ce-initial-param-card {
+  border: 1px solid var(--SmartThemeBorderColor, #444);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.ce-initial-param-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid var(--SmartThemeBorderColor, #444);
+}
+
+.ce-initial-param-entity-name {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--SmartThemeEmColor, #ddd);
+  flex: 1;
+}
+
+.ce-initial-param-card-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ce-initial-param-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.ce-initial-param-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ce-initial-param-control {
+  display: flex;
+  align-items: center;
+}
+
+.ce-initial-param-control input,
+.ce-initial-param-control select {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  padding: 4px 6px;
+  border-radius: 3px;
+}
+
+.ce-initial-param-control input:focus,
+.ce-initial-param-control select:focus {
+  outline: none;
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+  box-shadow: 0 0 0 2px rgba(63, 169, 245, 0.2);
+}
+
+.ce-initial-param-desc {
+  font-size: 0.8rem;
+  color: #888;
+  font-style: italic;
+}
+
+/* 关系型参数目标行的输入框样式 */
+.ce-initial-param-target-row input,
+.ce-initial-param-target-row select {
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  padding: 4px 6px;
+  border-radius: 3px;
+}
+
+.ce-initial-param-target-row input:focus,
+.ce-initial-param-target-row select:focus {
+  outline: none;
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+  box-shadow: 0 0 0 2px rgba(63, 169, 245, 0.2);
+}
+
+/* 关系型参数目标行布局 */
+.ce-initial-param-targets {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ce-initial-param-target-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ce-initial-param-target-label {
+  font-size: 0.85rem;
+  color: var(--SmartThemeEmColor, #ddd);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ce-initial-param-target-row input,
+.ce-initial-param-target-row select {
+  flex: 1;
+  min-width: 0;
+}
+
+.ce-initial-param-add-target {
+  margin-top: 4px;
+}
+
+/* ===========================
+ * 窄模式响应式布局
+ * 适用于侧边栏模式和手机浏览器
+ * =========================== */
+
+/* 窄模式判断：侧边栏模式或窄屏幕 */
+@media (max-width: 768px) {
+  /* 参数面板：窄模式下垂直堆叠
+   * 第一行：名称 + ID
+   * 第二行：类型 + 作用域
+   * 第三行：说明
+   * 第四行：参数设置
+   */
+  .ce-parameters-container .ce-form-row-multi {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .ce-parameters-container .ce-form-row-multi > * {
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+  
+  /* 实体面板：窄模式下垂直堆叠
+   * 每个字段独占一行
+   */
+  .ce-entities-container .ce-form-row-multi {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .ce-entities-container .ce-form-row-multi > * {
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+  
+  /* 横向表单行在窄模式下也改为垂直 */
+  .ce-form-row-horizontal {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .ce-form-row-horizontal label {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .ce-form-row-horizontal .ce-form-label {
+    margin-bottom: 4px;
+  }
+}
+
+/* 侧边栏模式专用：编辑器在右侧边栏时 */
+.ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar .ce-parameters-container .ce-form-row-multi,
+.ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar .ce-entities-container .ce-form-row-multi {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar .ce-parameters-container .ce-form-row-multi > *,
+.ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar .ce-entities-container .ce-form-row-multi > * {
+  flex: 1 1 100%;
+  min-width: 100%;
+}
+
+.ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar .ce-form-row-horizontal {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar .ce-form-row-horizontal label {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.ce-modal-backdrop[data-ce-editor-root] .ce-modal-sidebar .ce-form-row-horizontal .ce-form-label {
+  margin-bottom: 4px;
+}
+
+/* 侧边栏模式专用：观察器在左侧边栏时 */
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-parameters-container .ce-form-row-multi,
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-entities-container .ce-form-row-multi {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-parameters-container .ce-form-row-multi > *,
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-entities-container .ce-form-row-multi > * {
+  flex: 1 1 100%;
+  min-width: 100%;
+}
+
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-form-row-horizontal {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-form-row-horizontal label {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.ce-modal-backdrop[data-ce-state-observer-root] .ce-modal-sidebar .ce-form-row-horizontal .ce-form-label {
+  margin-bottom: 4px;
+}
+/* ===========================
+ * 参数绑定编辑器对话框样式
+ * =========================== */
+
+/* 对话框背景遮罩 */
+.ce-param-binding-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000; /* 高于编辑器弹窗 */
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 对话框容器 */
+.ce-param-binding-dialog {
+  position: relative;
+  width: min(600px, 90vw);
+  max-height: 80vh;
+  background: var(--SmartThemeBlurTintColor, #202020);
+  border-radius: 10px;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--SmartThemeBodyColor, #e9e9e9);
+}
+
+/* 对话框头部 */
+.ce-param-binding-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--SmartThemeBorderColor, #444);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.ce-param-binding-title {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.ce-param-binding-close {
+  border: none;
+  background: transparent;
+  color: var(--SmartThemeBodyColor, #e9e9e9);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 6px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.ce-param-binding-close:hover {
+  color: #ff6666;
+}
+
+/* 对话框主体 */
+.ce-param-binding-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.ce-param-binding-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ce-param-binding-body::-webkit-scrollbar-track {
+  background: var(--SmartThemeBodyColor);
+}
+
+.ce-param-binding-body::-webkit-scrollbar-thumb {
+  background: var(--SmartThemeBorderColor);
+  border-radius: 3px;
+}
+
+/* 对话框区块 */
+.ce-param-binding-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ce-param-binding-section-title {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--SmartThemeAccentColor, #3fa9f5);
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(63, 169, 245, 0.3);
+}
+
+/* 已绑定列表 */
+.ce-param-binding-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 60px;
+}
+
+.ce-param-binding-empty {
+  padding: 20px;
+  text-align: center;
+  color: #888;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.ce-param-binding-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--SmartThemeBorderColor, #444);
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.ce-param-binding-item:hover {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+}
+
+.ce-param-binding-item-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ce-param-binding-item-icon {
+  color: #2ecc71;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.ce-param-binding-item-param {
+  font-weight: 500;
+  color: var(--SmartThemeEmColor, #ddd);
+  flex-shrink: 0;
+}
+
+.ce-param-binding-item-arrow {
+  color: #888;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.ce-param-binding-item-target {
+  color: var(--SmartThemeAccentColor, #3fa9f5);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 添加表单 */
+.ce-param-binding-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ce-param-binding-select {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  padding: 6px 8px;
+  border-radius: 3px;
+}
+
+.ce-param-binding-select:focus {
+  outline: none;
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+  box-shadow: 0 0 0 2px rgba(63, 169, 245, 0.2);
+}
+
+.ce-param-binding-select-inline {
+  width: auto;
+  min-width: 100px;
+  margin-left: 6px;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  padding: 4px 6px;
+  border-radius: 3px;
+}
+
+.ce-param-binding-select-inline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 绑定目标选项 */
+.ce-param-binding-target-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+.ce-param-binding-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.ce-param-binding-radio-label input[type="radio"] {
+  cursor: pointer;
+}
+
+/* 实体列表 */
+.ce-param-binding-entity-list {
+  margin-left: 24px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  border: 1px solid var(--SmartThemeBorderColor, #444);
+}
+
+.ce-param-binding-search {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  padding: 6px 8px;
+  border-radius: 3px;
+  margin-bottom: 8px;
+}
+
+.ce-param-binding-search:focus {
+  outline: none;
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+  box-shadow: 0 0 0 2px rgba(63, 169, 245, 0.2);
+}
+
+.ce-param-binding-entity-checkboxes {
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ce-param-binding-entity-checkboxes::-webkit-scrollbar {
+  width: 4px;
+}
+
+.ce-param-binding-entity-checkboxes::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.ce-param-binding-entity-checkboxes::-webkit-scrollbar-thumb {
+  background: var(--SmartThemeBorderColor);
+  border-radius: 2px;
+}
+
+.ce-param-binding-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  padding: 4px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.ce-param-binding-checkbox-label:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ce-param-binding-checkbox-label input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.ce-param-binding-entity-type {
+  color: #888;
+  font-size: 0.8rem;
+  margin-left: auto;
+}
+
+/* 对话框底部 */
+.ce-param-binding-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 15px;
+  border-top: 1px solid var(--SmartThemeBorderColor, #444);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* 绑定按钮样式 */
+.ce-param-binding-btn {
+  min-width: auto !important;
+  padding: 4px 8px !important;
+}
+
+.ce-param-binding-btn i {
+  font-size: 0.9rem;
+}
+
+/* ===========================
+ * 参数绑定列表样式（卡片式）
+ * =========================== */
+
+/* 绑定区域容器 */
+.ce-param-bindings-section {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--SmartThemeBorderColor, #444);
+  border-radius: 6px;
+}
+
+/* 绑定区域头部 */
+.ce-param-bindings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--SmartThemeBorderColor, #444);
+}
+
+.ce-param-bindings-title {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--SmartThemeAccentColor, #3fa9f5);
+}
+
+/* 绑定列表容器 */
+.ce-param-bindings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 40px;
+}
+
+/* 空状态 */
+.ce-param-bindings-empty {
+  padding: 20px;
+  text-align: center;
+  color: #888;
+  font-size: 0.85rem;
+  font-style: italic;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+/* 提示信息 */
+.ce-param-bindings-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px;
+  background: rgba(63, 169, 245, 0.1);
+  border-left: 3px solid var(--SmartThemeAccentColor, #3fa9f5);
+  border-radius: 3px;
+  font-size: 0.8rem;
+  color: #aaa;
+  line-height: 1.4;
+}
+
+.ce-param-bindings-hint i {
+  color: var(--SmartThemeAccentColor, #3fa9f5);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+/* 内联消息 */
+.ce-param-bindings-message {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+}
+
+.ce-param-bindings-message-info {
+  background: rgba(63, 169, 245, 0.15);
+  border-left: 3px solid var(--SmartThemeAccentColor, #3fa9f5);
+  color: #3fa9f5;
+}
+
+.ce-param-bindings-message-warning {
+  background: rgba(255, 193, 7, 0.15);
+  border-left: 3px solid #ffc107;
+  color: #ffc107;
+}
+
+/* 绑定类型选项 */
+.ce-param-binding-type-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+.ce-param-binding-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.ce-param-binding-radio-label input[type="radio"] {
+  cursor: pointer;
+}
+
+/* 下拉选择框 */
+.ce-param-binding-select {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  padding: 6px 8px;
+  border-radius: 3px;
+}
+
+.ce-param-binding-select:focus {
+  outline: none;
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+  box-shadow: 0 0 0 2px rgba(63, 169, 245, 0.2);
+}
+
+/* 多选列表 */
+.ce-param-binding-multiselect {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  background-color: #202020;
+  color: #f5f5f5;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  padding: 6px 8px;
+  border-radius: 3px;
+}
+
+.ce-param-binding-multiselect:focus {
+  outline: none;
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+  box-shadow: 0 0 0 2px rgba(63, 169, 245, 0.2);
+}
+
+.ce-param-binding-multiselect option {
+  padding: 4px;
+}
+
+.ce-param-binding-multiselect option:checked {
+  background: var(--SmartThemeAccentColor, #3fa9f5);
+  color: #fff;
+}
+
+/* 绑定按钮样式 */
+.ce-param-binding-btn {
+  min-width: auto !important;
+  padding: 4px 8px !important;
+}
+
+.ce-param-binding-btn i {
+  font-size: 0.9rem;
+}
+
+/* 紧凑编辑控件（在折叠状态下的参数选择） */
+.ce-param-binding-compact-select {
+  min-width: 150px;
+  max-width: 200px;
+}
+
+/* Tag容器（实体多选） */
+.ce-param-binding-tag-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  border-radius: 4px;
+  min-height: 36px;
+  background: #202020;
+}
+
+/* Tag样式 */
+.ce-param-binding-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--SmartThemeAccentColor, #3fa9f5);
+  border-radius: 3px;
+  font-size: 0.85rem;
+  color: #fff;
+}
+
+.ce-param-binding-tag i {
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+  font-size: 0.8rem;
+}
+
+.ce-param-binding-tag i:hover {
+  opacity: 1;
+}
+
+/* Tag选择器 */
+.ce-param-binding-tag-select {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border: 1px dashed var(--SmartThemeBorderColor, #555);
+  background: transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--SmartThemeQuoteColor, #999);
+  transition: all 0.2s;
+}
+
+.ce-param-binding-tag-select:hover {
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.ce-param-binding-tag-select:focus {
+  outline: none;
+  border-color: var(--SmartThemeAccentColor, #3fa9f5);
+  border-style: solid;
+  box-shadow: 0 0 0 2px rgba(63, 169, 245, 0.2);
+}
+
+/* ===========================
+ * 加载动画样式
+ * =========================== */
+
+/* 旋转加载动画 */
+@keyframes ce-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 脉冲加载动画 */
+@keyframes ce-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* 进度条加载动画 */
+@keyframes ce-progress-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* 加载指示器容器 */
+.ce-loading-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 旋转加载图标 */
+.ce-loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(63, 169, 245, 0.3);
+  border-top-color: var(--SmartThemeAccentColor, #3fa9f5);
+  border-radius: 50%;
+  animation: ce-spin 0.8s linear infinite;
+}
+
+/* 小尺寸旋转图标 */
+.ce-loading-spinner-small {
+  width: 12px;
+  height: 12px;
+  border-width: 2px;
+}
+
+/* 大尺寸旋转图标 */
+.ce-loading-spinner-large {
+  width: 24px;
+  height: 24px;
+  border-width: 3px;
+}
+
+/* 脉冲点动画 */
+.ce-loading-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.ce-loading-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--SmartThemeAccentColor, #3fa9f5);
+  animation: ce-pulse 1.4s ease-in-out infinite;
+}
+
+.ce-loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.ce-loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* 进度条脉冲效果 */
+.ce-progress-bar-animated {
+  position: relative;
+  overflow: hidden;
+}
+
+.ce-progress-bar-animated::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: ce-progress-pulse 1.5s ease-in-out infinite;
+}

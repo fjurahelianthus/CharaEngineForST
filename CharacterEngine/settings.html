@@ -1,0 +1,68 @@
+<div class="inline-drawer">
+  <div class="inline-drawer-toggle inline-drawer-header">
+    <b>角色引擎</b>
+    <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+  </div>
+  <div class="inline-drawer-content">
+    <div class="ce-settings-root">
+      <div class="ce-section">
+        <div class="section-divider">基本设置</div>
+        <div class="flex-container alignItemsCenter" style="gap:8px;flex-wrap:wrap;">
+          <input type="checkbox" id="ce_enabled" />
+          <label for="ce_enabled" title="推荐开启；关闭时角色引擎不会改写提示或维护数值状态">启用角色引擎</label>
+        </div>
+        <div class="flex-container alignItemsCenter ce-settings-button-row" style="gap:8px;margin-top:4px;">
+          <button id="ce_open_editor" class="menu_button" type="button"
+            title="打开当前角色的参数与提示词编辑器（数据直接写入角色卡扩展字段）">
+            当前角色参数 / 提示编辑器
+          </button>
+          <button id="ce_open_state_observer" class="menu_button" type="button"
+            title="查看当前楼层 EngineState 与提示命中情况，仅用于观察与模拟，不修改存档">
+            参数 / 状态观察器
+          </button>
+        </div>
+      </div>
+      <hr class="sysHR" />
+      <div class="ce-section">
+        <div class="section-divider">对话逻辑</div>
+        <div class="flex-container alignItemsCenter" style="gap:8px;flex-wrap:wrap;">
+          <input type="checkbox" id="ce_use_early_parse" />
+          <label for="ce_use_early_parse" title="在生成本轮回复前，基于上一轮回复和当前输入提前解析 CE_UpdateState / CE_UpdateScene。">启用提前解析</label>
+        </div>
+      </div>
+      <hr class="sysHR" />
+      <div class="ce-section">
+        <div class="section-divider">世界观 / 历史检索</div>
+        <div class="flex-container alignItemsCenter" style="gap:8px;flex-wrap:wrap;">
+          <input type="checkbox" id="ce_use_world_rag" />
+          <label for="ce_use_world_rag" title="实验功能，默认关闭；启用后可按 WorldContextIntent 从设定与日志中检索相关片段">启用世界观 RAG</label>
+        </div>
+        <div class="flex-container alignItemsCenter ce-settings-button-row" style="gap:8px;margin-top:4px;">
+          <button id="ce_open_lore_manager" class="menu_button" type="button"
+            title="打开世界观设定管理器，管理RAG集合、文档和向量化">
+            世界观设定管理器
+          </button>
+          <button id="ce_open_retrieval_tester" class="menu_button" type="button"
+            title="打开RAG检索测试器，测试向量检索功能">
+            RAG 检索测试器
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+  .ce-settings-root .section-divider {
+    font-size: 0.8em;
+    color: #8f8f8f;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: 0.05em;
+  }
+  .ce-settings-root label {
+    margin-top: 0.2em;
+  }
+  .ce-settings-root input[type="checkbox"] {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+</style>
