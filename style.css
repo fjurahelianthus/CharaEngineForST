@@ -28,5 +28,8 @@
 /* RAG管理器样式 - 世界观设定管理器布局 */
 @import url('./styles/rag-manager.css');
 
+/* 解析API设置样式 - 解析模型API配置弹窗 */
+@import url('./styles/parse-api-settings.css');
+
 /* 响应式布局样式 - 移动端和窄屏适配 */
 @import url('./styles/responsive.css');

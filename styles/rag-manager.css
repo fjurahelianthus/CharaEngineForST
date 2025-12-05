@@ -100,3 +100,57 @@
 .ce-hybrid-search-wrapper .ce-section-header {
   margin-bottom: 10px;
 }
+
+/* ===========================
+ * 独立集合管理器样式
+ * =========================== */
+
+/* 集合卡片 */
+.ce-collection-card {
+  padding: 20px;
+  background: var(--black30a, rgba(0, 0, 0, 0.3));
+  border: 1px solid var(--SmartThemeBorderColor, #444);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.ce-collection-card:hover {
+  border-color: var(--SmartThemeBlurTintColor, #4a9eff);
+  box-shadow: 0 2px 8px rgba(74, 158, 255, 0.2);
+}
+
+/* 集合卡片头部 */
+.ce-collection-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+/* 集合卡片详情（可展开） */
+.ce-collection-card-details {
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 大型模态窗口 */
+.ce-modal-large {
+  width: 90%;
+  max-width: 1200px;
+  max-height: 85vh;
+}
+
+.ce-modal-large .ce-modal-body {
+  max-height: calc(85vh - 140px);
+  overflow-y: auto;
+}

@@ -13,8 +13,11 @@ export function createModalDOM() {
 
   root.innerHTML = `
     <div class="ce-modal">
-      <div class="ce-modal-header">
-        <div class="ce-modal-title">参数与提示编辑器</div>
+      <div class="ce-modal-header ce-draggable-handle">
+        <div class="ce-modal-title">
+          <span class="ce-drag-indicator">⋮⋮</span>
+          参数与提示编辑器
+        </div>
         <div class="ce-modal-header-actions">
           <button class="ce-modal-action-btn" data-action="toggle-sidebar" type="button" title="切换侧边栏模式">
             <i class="fa-solid fa-bars-staggered"></i>
@@ -57,6 +60,10 @@ export function createModalDOM() {
           <button class="ce-btn ce-btn-secondary" data-action="cancel">关闭</button>
         </div>
       </div>
+      <!-- 缩放手柄 -->
+      <div class="ce-resize-handle ce-resize-handle-se" data-resize="se"></div>
+      <div class="ce-resize-handle ce-resize-handle-e" data-resize="e"></div>
+      <div class="ce-resize-handle ce-resize-handle-s" data-resize="s"></div>
     </div>
   `;
 
@@ -99,11 +106,20 @@ export function updateEditorTitle(root) {
 
   const baseTitle = "参数与提示编辑器";
   const charName = getCurrentCharacterName();
-
-  if (charName) {
-    titleEl.textContent = `${baseTitle} - 当前角色：${charName}`;
+  
+  // 保留拖动指示器，只更新文本部分
+  const dragIndicator = titleEl.querySelector(".ce-drag-indicator");
+  const titleText = charName
+    ? `${baseTitle} - 当前角色：${charName}`
+    : `${baseTitle}（未选择角色卡）`;
+  
+  if (dragIndicator) {
+    // 如果有拖动指示器，保留它
+    titleEl.innerHTML = '';
+    titleEl.appendChild(dragIndicator);
+    titleEl.appendChild(document.createTextNode(titleText));
   } else {
-    titleEl.textContent = `${baseTitle}（未选择角色卡）`;
+    titleEl.textContent = titleText;
   }
 
   updateLockState(root);
@@ -188,6 +204,9 @@ export function setEditorStatusMessage(root, text, type = "info") {
  * @param {Function} [saveBeforeCloseFn] - 关闭前保存的函数（可选）
  */
 export function wireModalEvents(root, closeFn, saveBeforeCloseFn) {
+  // 初始化拖动和缩放功能
+  initDragAndResize(root);
+  
   // 关闭按钮
   const closeBtn = root.querySelector(".ce-modal-close");
   if (closeBtn) {
@@ -219,6 +238,112 @@ export function wireModalEvents(root, closeFn, saveBeforeCloseFn) {
 }
 
 /**
+ * 拖动和缩放状态
+ */
+let dragState = null;
+let resizeState = null;
+
+/**
+ * 初始化拖动和缩放功能
+ * @param {HTMLElement} root
+ */
+function initDragAndResize(root) {
+  const modal = root.querySelector(".ce-modal");
+  const header = root.querySelector(".ce-draggable-handle");
+  
+  if (!modal || !header) return;
+
+  // 拖动功能
+  header.addEventListener("mousedown", (e) => {
+    // 检查是否在侧边栏模式
+    if (modal.classList.contains("ce-modal-sidebar")) return;
+    
+    if (e.target.closest(".ce-modal-action-btn") || e.target.closest(".ce-modal-close")) {
+      return; // 点击按钮时不触发拖动
+    }
+    
+    dragState = {
+      startX: e.clientX,
+      startY: e.clientY,
+      modalLeft: modal.offsetLeft,
+      modalTop: modal.offsetTop
+    };
+    
+    modal.style.cursor = "move";
+    e.preventDefault();
+  });
+
+  // 缩放功能
+  const resizeHandles = modal.querySelectorAll(".ce-resize-handle");
+  resizeHandles.forEach(handle => {
+    handle.addEventListener("mousedown", (e) => {
+      // 检查是否在侧边栏模式
+      if (modal.classList.contains("ce-modal-sidebar")) return;
+      
+      const direction = handle.dataset.resize;
+      resizeState = {
+        startX: e.clientX,
+        startY: e.clientY,
+        startWidth: modal.offsetWidth,
+        startHeight: modal.offsetHeight,
+        startLeft: modal.offsetLeft,
+        startTop: modal.offsetTop,
+        direction
+      };
+      
+      e.preventDefault();
+      e.stopPropagation();
+    });
+  });
+
+  // 全局鼠标移动事件
+  document.addEventListener("mousemove", (e) => {
+    // 处理拖动
+    if (dragState) {
+      const deltaX = e.clientX - dragState.startX;
+      const deltaY = e.clientY - dragState.startY;
+      
+      modal.style.left = `${dragState.modalLeft + deltaX}px`;
+      modal.style.top = `${dragState.modalTop + deltaY}px`;
+      modal.style.right = "auto";
+      modal.style.bottom = "auto";
+      modal.style.transform = "none";
+    }
+    
+    // 处理缩放
+    if (resizeState) {
+      const deltaX = e.clientX - resizeState.startX;
+      const deltaY = e.clientY - resizeState.startY;
+      
+      const minWidth = 400;
+      const minHeight = 300;
+      
+      if (resizeState.direction.includes("e")) {
+        const newWidth = Math.max(minWidth, resizeState.startWidth + deltaX);
+        modal.style.width = `${newWidth}px`;
+      }
+      
+      if (resizeState.direction.includes("s")) {
+        const newHeight = Math.max(minHeight, resizeState.startHeight + deltaY);
+        modal.style.height = `${newHeight}px`;
+        modal.style.maxHeight = "none";
+      }
+    }
+  });
+
+  // 全局鼠标释放事件
+  document.addEventListener("mouseup", () => {
+    if (dragState) {
+      modal.style.cursor = "";
+      dragState = null;
+    }
+    if (resizeState) {
+      resizeState = null;
+    }
+  });
+}
+
+/**
  * 切换侧边栏模式
  * @param {HTMLElement} root
  */
@@ -229,13 +354,33 @@ function toggleSidebarMode(root) {
   const isSidebar = modal.classList.contains("ce-modal-sidebar");
   
   if (isSidebar) {
-    // 切换回居中模式
+    // 切换回悬浮模式
     modal.classList.remove("ce-modal-sidebar");
     root.classList.remove("ce-modal-backdrop-sidebar");
+    
+    // 重置为居中位置
+    modal.style.left = "50%";
+    modal.style.top = "50%";
+    modal.style.transform = "translate(-50%, -50%)";
+    modal.style.right = "";
+    modal.style.bottom = "";
+    modal.style.width = "";
+    modal.style.height = "";
+    modal.style.maxHeight = "";
   } else {
     // 切换到侧边栏模式
     modal.classList.add("ce-modal-sidebar");
     root.classList.add("ce-modal-backdrop-sidebar");
+    
+    // 清除悬浮模式下可能设置的内联样式
+    modal.style.left = "";
+    modal.style.top = "";
+    modal.style.right = "";
+    modal.style.bottom = "";
+    modal.style.transform = "";
+    modal.style.width = "";
+    modal.style.height = "";
+    modal.style.maxHeight = "";
   }
   
   // 保存用户偏好到 localStorage

@@ -29,6 +29,12 @@
           <input type="checkbox" id="ce_use_early_parse" />
           <label for="ce_use_early_parse" title="在生成本轮回复前，基于上一轮回复和当前输入提前解析 CE_UpdateState / CE_UpdateScene。">启用提前解析</label>
         </div>
+        <div class="flex-container alignItemsCenter ce-settings-button-row" style="gap:8px;margin-top:4px;">
+          <button id="ce_open_parse_api_settings" class="menu_button" type="button"
+            title="配置解析模型的API参数（可选择使用当前API设置或自定义覆写）">
+            解析模型 API 设置
+          </button>
+        </div>
       </div>
       <hr class="sysHR" />
       <div class="ce-section">
@@ -45,6 +51,10 @@
           <button id="ce_open_lore_manager" class="menu_button" type="button"
             title="打开世界观设定管理器，管理RAG集合、文档和向量化">
             世界观设定管理器
+          </button>
+          <button id="ce_open_collection_manager" class="menu_button" type="button"
+            title="打开独立集合管理器，快速管理所有RAG集合">
+            集合管理器
           </button>
           <button id="ce_open_retrieval_tester" class="menu_button" type="button"
             title="打开RAG检索测试器，测试向量检索功能">

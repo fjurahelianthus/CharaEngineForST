@@ -223,10 +223,16 @@ function createLoreManagerModal() {
                 <span>集合管理</span>
           <div style="display: flex; gap: 8px;">
             <button class="ce-btn ce-btn-small" data-action="new-collection">
-              <span>➕</span> 新建集合
+              <i class="fa-solid fa-plus"></i> 新建集合
+            </button>
+            <button class="ce-btn ce-btn-small ce-btn-secondary" data-action="import-collections">
+              <i class="fa-solid fa-file-import"></i> 导入集合
+            </button>
+            <button class="ce-btn ce-btn-small ce-btn-secondary" data-action="export-collections">
+              <i class="fa-solid fa-file-export"></i> 导出集合
             </button>
             <button class="ce-btn ce-btn-small ce-btn-secondary" data-action="refresh">
-              <span>🔄</span> 刷新
+              <i class="fa-solid fa-rotate"></i> 刷新
             </button>
           </div>
         </div>
@@ -672,8 +678,8 @@ function renderCollectionsList(modal, loreConfig) {
     const chunkCount = collection.vectorStore?.chunks?.length || 0;
     const isVectorized = chunkCount > 0;
     const statusBadge = isVectorized ?
-      '<span class="ce-collapsible-badge" style="background: var(--green, #4caf50);">已向量化</span>' :
-      '<span class="ce-collapsible-badge" style="background: var(--orange, #ff9800);">未向量化</span>';
+      '<span class="ce-collapsible-badge" style="background: var(--green, #4caf50);"><i class="fa-solid fa-check"></i> 已向量化</span>' :
+      '<span class="ce-collapsible-badge" style="background: var(--orange, #ff9800);"><i class="fa-solid fa-triangle-exclamation"></i> 未向量化</span>';
     
     return `
       <div class="ce-collapsible-card" data-collection-id="${collection.id}" style="margin-bottom: 10px;">
@@ -955,6 +961,16 @@ function bindLoreManagerEvents(modal) {
   // 独立恒定RAG折叠切换事件
   modal.querySelector('[data-action="toggle-independent-rag"]')?.addEventListener('click', () => {
     toggleIndependentRagSection(modal);
+  });
+  
+  // 导入集合
+  modal.querySelector('[data-action="import-collections"]')?.addEventListener('click', () => {
+    handleImportCollections(modal);
+  });
+  
+  // 导出集合
+  modal.querySelector('[data-action="export-collections"]')?.addEventListener('click', () => {
+    handleExportCollections(modal);
   });
 }
 
@@ -1831,4 +1847,341 @@ function createModelLoadingModal(title, modelId, showSpinner = true, showProgres
   }
   
   return backdrop;
+}
+
+/**
+ * 处理导入集合
+ * @param {HTMLElement} modal
+ */
+async function handleImportCollections(modal) {
+  hideMessage(modal);
+  
+  // 创建文件选择器
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = '.json';
+  fileInput.style.display = 'none';
+  
+  fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    try {
+      // 读取文件内容
+      const text = await file.text();
+      const importData = JSON.parse(text);
+      
+      // 验证导入数据格式
+      if (!importData.collections || !Array.isArray(importData.collections)) {
+        throw new Error('无效的导入文件格式：缺少 collections 数组');
+      }
+      
+      if (importData.collections.length === 0) {
+        showMessage(modal, '导入文件中没有集合', 'warning');
+        return;
+      }
+      
+      // 显示导入预览和选项
+      const importResult = await showImportDialog(modal, importData);
+      
+      if (!importResult) {
+        // 用户取消导入
+        return;
+      }
+      
+      const { selectedCollections, conflictResolution } = importResult;
+      
+      // 执行导入
+      const charConfig = getConfigForCurrentCharacter();
+      let loreConfig = loadLoreConfig(charConfig);
+      
+      let importedCount = 0;
+      let skippedCount = 0;
+      let replacedCount = 0;
+      
+      for (const collection of selectedCollections) {
+        const existingIndex = loreConfig.collections.findIndex(c => c.id === collection.id);
+        
+        if (existingIndex !== -1) {
+          // 集合ID已存在
+          if (conflictResolution === 'skip') {
+            skippedCount++;
+            continue;
+          } else if (conflictResolution === 'replace') {
+            // 替换现有集合
+            loreConfig.collections[existingIndex] = collection;
+            replacedCount++;
+          } else if (conflictResolution === 'rename') {
+            // 重命名导入的集合
+            const newId = `${collection.id}_imported_${Date.now()}`;
+            const newCollection = {
+              ...collection,
+              id: newId,
+              name: `${collection.name} (导入)`
+            };
+            loreConfig.collections.push(newCollection);
+            importedCount++;
+          }
+        } else {
+          // 新集合，直接添加
+          loreConfig.collections.push(collection);
+          importedCount++;
+        }
+      }
+      
+      // 保存配置
+      const updatedConfig = saveLoreConfig(charConfig, loreConfig);
+      await saveConfigForCurrentCharacter(updatedConfig);
+      
+      // 刷新界面
+      await loadLoreManagerData(modal);
+      
+      // 显示结果
+      let resultMessage = `导入完成！`;
+      if (importedCount > 0) resultMessage += ` 新增: ${importedCount}`;
+      if (replacedCount > 0) resultMessage += ` 替换: ${replacedCount}`;
+      if (skippedCount > 0) resultMessage += ` 跳过: ${skippedCount}`;
+      
+      showMessage(modal, resultMessage, 'success', 5000);
+      
+    } catch (err) {
+      console.error('[RAG LoreManager] 导入失败:', err);
+      showMessage(modal, `导入失败: ${err.message}`, 'error', 5000);
+    } finally {
+      // 清理文件选择器
+      document.body.removeChild(fileInput);
+    }
+  });
+  
+  // 触发文件选择
+  document.body.appendChild(fileInput);
+  fileInput.click();
+}
+
+/**
+ * 显示导入对话框
+ * @param {HTMLElement} parentModal
+ * @param {Object} importData
+ * @returns {Promise<Object|null>} 返回 {selectedCollections, conflictResolution} 或 null
+ */
+function showImportDialog(parentModal, importData) {
+  return new Promise((resolve) => {
+    const collections = importData.collections;
+    const charConfig = getConfigForCurrentCharacter();
+    const loreConfig = loadLoreConfig(charConfig);
+    
+    // 检测冲突
+    const conflicts = collections.filter(c =>
+      loreConfig.collections.some(existing => existing.id === c.id)
+    );
+    
+    const hasConflicts = conflicts.length > 0;
+    
+    // 创建导入对话框
+    const dialog = document.createElement('div');
+    dialog.className = 'ce-modal-backdrop';
+    dialog.style.display = 'flex';
+    dialog.style.zIndex = '10002'; // 在主模态窗口之上
+    
+    dialog.innerHTML = `
+      <div class="ce-modal ce-modal-medium">
+        <div class="ce-modal-header">
+          <div class="ce-modal-title">
+            <i class="fa-solid fa-file-import"></i>
+            <span>导入集合</span>
+          </div>
+          <button class="ce-modal-close" data-action="cancel-import">&times;</button>
+        </div>
+        
+        <div class="ce-modal-body">
+          <div style="margin-bottom: 15px;">
+            <div style="font-weight: 500; margin-bottom: 8px;">导入信息:</div>
+            <div style="padding: 10px; background: var(--black30a, rgba(0,0,0,0.3)); border-radius: 4px; font-size: 0.9em;">
+              <div>文件版本: ${importData.version || '未知'}</div>
+              <div>导出时间: ${importData.exportDate ? new Date(importData.exportDate).toLocaleString('zh-CN') : '未知'}</div>
+              <div>集合数量: ${collections.length}</div>
+            </div>
+          </div>
+          
+          ${hasConflicts ? `
+            <div style="margin-bottom: 15px; padding: 12px; background: var(--orange, #ff9800)22; border: 1px solid var(--orange, #ff9800); border-radius: 4px;">
+              <div style="font-weight: 500; margin-bottom: 8px; color: var(--orange, #ff9800);">
+                <i class="fa-solid fa-triangle-exclamation"></i> 检测到 ${conflicts.length} 个ID冲突
+              </div>
+              <div style="font-size: 0.9em; margin-bottom: 10px;">
+                以下集合的ID已存在:
+              </div>
+              <div style="max-height: 100px; overflow-y: auto; font-size: 0.85em; padding: 8px; background: var(--black50a, rgba(0,0,0,0.5)); border-radius: 4px;">
+                ${conflicts.map(c => `<div>• ${c.name || c.id}</div>`).join('')}
+              </div>
+              <div style="margin-top: 10px;">
+                <label style="display: block; margin-bottom: 6px; font-weight: 500;">冲突处理方式:</label>
+                <select id="ce-import-conflict-resolution" style="width: 100%; padding: 8px; background: var(--black50a, rgba(0,0,0,0.5)); border: 1px solid var(--SmartThemeBorderColor, #444); border-radius: 4px; color: var(--SmartThemeBodyColor, #ddd);">
+                  <option value="skip">跳过冲突的集合</option>
+                  <option value="replace">替换现有集合</option>
+                  <option value="rename">重命名导入的集合</option>
+                </select>
+              </div>
+            </div>
+          ` : ''}
+          
+          <div style="margin-bottom: 15px;">
+            <div style="font-weight: 500; margin-bottom: 8px;">选择要导入的集合:</div>
+            <div style="max-height: 300px; overflow-y: auto; border: 1px solid var(--SmartThemeBorderColor, #444); border-radius: 4px; padding: 10px; background: var(--black30a, rgba(0,0,0,0.3));">
+              <div style="margin-bottom: 10px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                  <input type="checkbox" id="ce-import-select-all" checked style="width: 18px; height: 18px;">
+                  <span style="font-weight: 500;">全选 / 取消全选</span>
+                </label>
+              </div>
+              <div style="border-top: 1px solid var(--SmartThemeBorderColor, #444); padding-top: 10px;">
+                ${collections.map((c, i) => {
+                  const isConflict = conflicts.some(conflict => conflict.id === c.id);
+                  const docCount = c.documents?.length || 0;
+                  const chunkCount = c.vectorStore?.chunks?.length || 0;
+                  const conflictBadge = isConflict ? '<span style="color: var(--orange, #ff9800); font-size: 0.85em;"> ⚠️ 冲突</span>' : '';
+                  
+                  return `
+                    <label style="display: flex; align-items: start; gap: 8px; padding: 8px; margin-bottom: 6px; background: var(--black50a, rgba(0,0,0,0.5)); border-radius: 4px; cursor: pointer;">
+                      <input type="checkbox" class="ce-import-collection-checkbox" data-index="${i}" checked style="width: 18px; height: 18px; margin-top: 2px;">
+                      <div style="flex: 1;">
+                        <div style="font-weight: 500;">${c.name || c.id}${conflictBadge}</div>
+                        <div style="font-size: 0.85em; color: var(--SmartThemeQuoteColor, #999);">
+                          ${docCount} 个文档 | ${chunkCount} 个片段
+                          ${c.description ? `<br><span style="font-style: italic;">${c.description}</span>` : ''}
+                        </div>
+                      </div>
+                    </label>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="ce-modal-footer">
+          <button class="ce-btn" data-action="confirm-import">导入</button>
+          <button class="ce-btn ce-btn-secondary" data-action="cancel-import">取消</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(dialog);
+    
+    // 全选/取消全选
+    const selectAllCheckbox = dialog.querySelector('#ce-import-select-all');
+    const collectionCheckboxes = dialog.querySelectorAll('.ce-import-collection-checkbox');
+    
+    selectAllCheckbox?.addEventListener('change', (e) => {
+      collectionCheckboxes.forEach(cb => {
+        cb.checked = e.target.checked;
+      });
+    });
+    
+    // 确认导入
+    dialog.querySelector('[data-action="confirm-import"]')?.addEventListener('click', () => {
+      const selectedIndices = Array.from(collectionCheckboxes)
+        .filter(cb => cb.checked)
+        .map(cb => parseInt(cb.dataset.index));
+      
+      if (selectedIndices.length === 0) {
+        alert('请至少选择一个集合');
+        return;
+      }
+      
+      const selectedCollections = selectedIndices.map(i => collections[i]);
+      const conflictResolution = dialog.querySelector('#ce-import-conflict-resolution')?.value || 'skip';
+      
+      dialog.remove();
+      resolve({ selectedCollections, conflictResolution });
+    });
+    
+    // 取消导入
+    dialog.querySelectorAll('[data-action="cancel-import"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        dialog.remove();
+        resolve(null);
+      });
+    });
+    
+    // 点击背景取消
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) {
+        dialog.remove();
+        resolve(null);
+      }
+    });
+  });
+}
+
+/**
+ * 处理导出集合
+ * @param {HTMLElement} modal
+ */
+function handleExportCollections(modal) {
+  const charConfig = getConfigForCurrentCharacter();
+  const loreConfig = loadLoreConfig(charConfig);
+  const collections = getLoreCollections(loreConfig);
+  
+  if (collections.length === 0) {
+    showMessage(modal, '没有可导出的集合', 'warning');
+    return;
+  }
+  
+  // 创建选择对话框
+  const collectionNames = collections.map(c => c.name || c.id);
+  const selectedIndices = [];
+  
+  // 简单的多选实现（使用confirm循环）
+  let message = '请选择要导出的集合（输入序号，用逗号分隔）:\n\n';
+  collections.forEach((c, i) => {
+    message += `${i + 1}. ${c.name || c.id} (${c.documents?.length || 0}个文档)\n`;
+  });
+  message += '\n例如: 1,2,3 或 all（导出全部）';
+  
+  const input = prompt(message);
+  
+  if (!input) return;
+  
+  let selectedCollections;
+  if (input.trim().toLowerCase() === 'all') {
+    selectedCollections = collections;
+  } else {
+    const indices = input.split(',').map(s => parseInt(s.trim()) - 1);
+    selectedCollections = indices
+      .filter(i => i >= 0 && i < collections.length)
+      .map(i => collections[i]);
+  }
+  
+  if (selectedCollections.length === 0) {
+    showMessage(modal, '未选择有效的集合', 'warning');
+    return;
+  }
+  
+  try {
+    const exportData = {
+      version: '1.0',
+      exportDate: new Date().toISOString(),
+      exportedBy: 'CharacterEngine RAG Lore Manager',
+      collections: selectedCollections
+    };
+    
+    // 创建下载链接
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `rag_collections_export_${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showMessage(modal, `已导出 ${selectedCollections.length} 个集合`, 'success');
+  } catch (err) {
+    console.error('[RAG LoreManager] 导出失败:', err);
+    showMessage(modal, `导出失败: ${err.message}`, 'error');
+  }
 }

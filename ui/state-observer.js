@@ -1310,11 +1310,31 @@ function toggleSidebarMode() {
     modal.classList.add("ce-modal-sidebar");
     modal.classList.remove("ce-modal-draggable");
     observerModalRoot.classList.add("ce-modal-backdrop-sidebar");
+    
+    // 清除悬浮模式下可能设置的内联样式
+    modal.style.left = "";
+    modal.style.top = "";
+    modal.style.right = "";
+    modal.style.bottom = "";
+    modal.style.transform = "";
+    modal.style.width = "";
+    modal.style.height = "";
+    modal.style.maxHeight = "";
   } else {
-    // 切换回浮动模式
+    // 切换回悬浮模式
     modal.classList.remove("ce-modal-sidebar");
     modal.classList.add("ce-modal-draggable");
     observerModalRoot.classList.remove("ce-modal-backdrop-sidebar");
+    
+    // 重置为居中位置
+    modal.style.left = "50%";
+    modal.style.top = "50%";
+    modal.style.transform = "translate(-50%, -50%)";
+    modal.style.right = "";
+    modal.style.bottom = "";
+    modal.style.width = "";
+    modal.style.height = "";
+    modal.style.maxHeight = "";
   }
   
   // 更新图标：◧ = 左侧边栏，◨ = 浮动窗口

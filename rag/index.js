@@ -74,5 +74,6 @@ export { injectIndependentRag, summarizeIndependentRagPrompt, validateIndependen
 
 // ===== UI相关API =====
 export { openLoreManager } from './ui/lore-manager.js';
+export { openCollectionManager } from './ui/collection-manager.js';
 export { openDocumentEditor } from './ui/document-editor.js';
 export { openRetrievalTester } from './ui/retrieval-tester.js';

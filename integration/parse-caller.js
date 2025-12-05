@@ -555,6 +555,186 @@ export async function callParseModel(parseInput) {
   try {
     const settings = extension_settings[EXT_ID] || {};
     const useStreaming = settings.parseStreaming !== false;
+    
+    // 获取解析模型API设置
+    const parseApiSettings = settings.parseApiSettings || {
+      useCustomApi: false,
+      apiConnection: {
+        provider: '',
+        model: '',
+        apiKey: '',
+        baseURL: '',
+        customEndpoint: ''
+      },
+      parameters: {
+        temperature: { enabled: true, value: 0.6 },
+        maxTokens: { enabled: true, value: 8192 },
+        topP: { enabled: false, value: 1.0 },
+        topK: { enabled: false, value: 0 },
+        frequencyPenalty: { enabled: false, value: 0 },
+        presencePenalty: { enabled: false, value: 0 },
+        repetitionPenalty: { enabled: false, value: 1.0 }
+      }
+    };
+
+    // eslint-disable-next-line no-console
+    console.debug("[CharacterEngine] 解析API设置:", {
+      useCustomApi: parseApiSettings.useCustomApi,
+      provider: parseApiSettings.apiConnection?.provider,
+      model: parseApiSettings.apiConnection?.model,
+      hasApiKey: !!parseApiSettings.apiConnection?.apiKey,
+      hasBaseURL: !!parseApiSettings.apiConnection?.baseURL
+    });
+
+    // 根据设置决定API配置
+    let apiConfig;
+    if (parseApiSettings.useCustomApi) {
+      // 使用自定义API设置
+      const conn = parseApiSettings.apiConnection || {};
+      const params = parseApiSettings.parameters || {};
+      
+      // eslint-disable-next-line no-console
+      console.debug("[CharacterEngine] 解析API设置 - 原始配置:", {
+        provider: conn.provider,
+        model: conn.model,
+        hasApiKey: !!conn.apiKey,
+        hasBaseURL: !!conn.baseURL,
+        hasCustomEndpoint: !!conn.customEndpoint
+      });
+      
+      // 检查是否为"继承+覆写"模式（provider为空或为'current'）
+      const isInheritMode = !conn.provider || conn.provider === '' || conn.provider === 'current';
+      
+      if (isInheritMode) {
+        // 继承模式：使用当前API设置，但可以覆写某些参数
+        // 注意：在继承模式下，我们只覆写明确指定的参数
+        const overrides = {};
+        
+        // 如果指定了模型，覆写模型
+        if (conn.model && conn.model !== '') {
+          overrides.model = conn.model;
+        }
+        
+        // 注意：在继承模式下，通常不需要覆写API密钥和Base URL
+        // 因为这些会从当前API设置中自动继承
+        // 只有在用户明确填写了这些字段时才覆写
+        if (conn.apiKey && conn.apiKey !== '') {
+          overrides.apiKey = conn.apiKey;
+        }
+        
+        if (conn.baseURL && conn.baseURL !== '') {
+          overrides.baseURL = conn.baseURL;
+        }
+        
+        // 添加采样参数覆写
+        if (params.temperature?.enabled) {
+          overrides.temperature = params.temperature.value;
+        }
+        if (params.maxTokens?.enabled) {
+          overrides.maxTokens = params.maxTokens.value;
+        }
+        if (params.topP?.enabled) {
+          overrides.topP = params.topP.value;
+        }
+        if (params.topK?.enabled) {
+          overrides.topK = params.topK.value;
+        }
+        if (params.frequencyPenalty?.enabled) {
+          overrides.frequencyPenalty = params.frequencyPenalty.value;
+        }
+        if (params.presencePenalty?.enabled) {
+          overrides.presencePenalty = params.presencePenalty.value;
+        }
+        if (params.repetitionPenalty?.enabled) {
+          overrides.repetitionPenalty = params.repetitionPenalty.value;
+        }
+        
+        apiConfig = {
+          inherit: true,
+          overrides: overrides
+        };
+        
+        // eslint-disable-next-line no-console
+        console.debug("[CharacterEngine] 使用继承+覆写模式:", {
+          inherit: true,
+          overridesCount: Object.keys(overrides).length,
+          overrides: overrides
+        });
+      } else {
+        // 完全自定义模式：不继承当前API设置
+        apiConfig = {
+          inherit: false
+        };
+        
+        // 添加提供商和模型
+        if (conn.provider && conn.provider !== '') {
+          apiConfig.provider = conn.provider;
+        }
+        if (conn.model && conn.model !== '') {
+          apiConfig.model = conn.model;
+        }
+        
+        // 添加API密钥
+        if (conn.apiKey && conn.apiKey !== '') {
+          apiConfig.apiKey = conn.apiKey;
+        }
+        
+        // 添加Base URL或自定义端点
+        if (conn.baseURL && conn.baseURL !== '') {
+          apiConfig.baseURL = conn.baseURL;
+        }
+        if (conn.customEndpoint && conn.customEndpoint !== '') {
+          apiConfig.customEndpoint = conn.customEndpoint;
+        }
+        
+        // 构建参数覆写对象
+        const overrides = {};
+        if (params.temperature?.enabled) {
+          overrides.temperature = params.temperature.value;
+        }
+        if (params.maxTokens?.enabled) {
+          overrides.maxTokens = params.maxTokens.value;
+        }
+        if (params.topP?.enabled) {
+          overrides.topP = params.topP.value;
+        }
+        if (params.topK?.enabled) {
+          overrides.topK = params.topK.value;
+        }
+        if (params.frequencyPenalty?.enabled) {
+          overrides.frequencyPenalty = params.frequencyPenalty.value;
+        }
+        if (params.presencePenalty?.enabled) {
+          overrides.presencePenalty = params.presencePenalty.value;
+        }
+        if (params.repetitionPenalty?.enabled) {
+          overrides.repetitionPenalty = params.repetitionPenalty.value;
+        }
+        
+        // 只有在有覆写参数时才添加 overrides
+        if (Object.keys(overrides).length > 0) {
+          apiConfig.overrides = overrides;
+        }
+        
+        // eslint-disable-next-line no-console
+        console.debug("[CharacterEngine] 使用完全自定义模式:", apiConfig);
+      }
+    } else {
+      // 继承当前API设置，但覆写部分参数
+      apiConfig = {
+        inherit: true,
+        overrides: {
+          temperature: 0.6,  // 解析任务用低温度
+          maxTokens: 8192   // 允许较长输出
+        }
+      };
+      
+      // eslint-disable-next-line no-console
+      console.debug("[CharacterEngine] 使用继承API配置（当前API设置）");
+    }
+    
+    // eslint-disable-next-line no-console
+    console.debug("[CharacterEngine] 最终API配置:", apiConfig);
 
     // 构造 callGenerate 选项
     const options = {
@@ -582,13 +762,7 @@ export async function callParseModel(parseInput) {
           }
         } : undefined
       },
-      api: {
-        inherit: true,
-        overrides: {
-          temperature: 0.6,  // 解析任务用低温度
-          maxTokens: 8192   // 允许较长输出
-        }
-      },
+      api: apiConfig,
       session: { id: 'ce1' },
       debug: { enabled: false }
     };

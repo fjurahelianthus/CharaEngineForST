@@ -2,6 +2,7 @@ import { extension_settings, getContext } from "../../../extensions.js";
 import { saveSettingsDebounced, eventSource, event_types } from "../../../../../script.js";
 import { openCeEditorPanel } from "./ui/editor-panel.js";
 import { openCeStateObserverPanel } from "./ui/state-observer.js";
+import { openParseApiSettings } from "./ui/parse-api-settings.js";
 import { ceGenerateInterceptor } from "./orchestration/interceptor.js";
 import { getCallGenerateService, handleGenerateRequest } from "./services/call-generate.js";
 
@@ -88,6 +89,7 @@ function wireSettingsForm(container) {
   const independentRagCheckbox = container.querySelector("#ce_use_independent_rag");
   const openEditorBtn = container.querySelector("#ce_open_editor");
   const openStateObserverBtn = container.querySelector("#ce_open_state_observer");
+  const openParseApiSettingsBtn = container.querySelector("#ce_open_parse_api_settings");
 
   if (enableCheckbox) {
     enableCheckbox.checked = !!settings.enabled;
@@ -157,6 +159,27 @@ function wireSettingsForm(container) {
     });
   }
 
+  // ⭐ 独立集合管理器按钮
+  const openCollectionManagerBtn = container.querySelector("#ce_open_collection_manager");
+  if (openCollectionManagerBtn) {
+    openCollectionManagerBtn.addEventListener("click", async () => {
+      try {
+        // 确保RAG系统已加载（无论是否启用）
+        if (!ragSystem) {
+          console.log('[CharacterEngine] 加载RAG子系统...');
+          ragSystem = await import('./rag/index.js');
+          await ragSystem.initializeRagSystem();
+        }
+        
+        // 打开独立集合管理器
+        ragSystem.openCollectionManager();
+      } catch (err) {
+        console.error('[CharacterEngine] 打开集合管理器失败', err);
+        alert(`打开失败: ${err.message}`);
+      }
+    });
+  }
+
   // ⭐ RAG检索测试器按钮
   const openRetrievalTesterBtn = container.querySelector("#ce_open_retrieval_tester");
   if (openRetrievalTesterBtn) {
@@ -196,6 +219,17 @@ function wireSettingsForm(container) {
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error("[CharacterEngine] 打开参数/状态观察器失败", err);
+      }
+    });
+  }
+
+  if (openParseApiSettingsBtn) {
+    openParseApiSettingsBtn.addEventListener("click", () => {
+      try {
+        openParseApiSettings();
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error("[CharacterEngine] 打开解析模型API设置失败", err);
       }
     });
   }
