@@ -8,7 +8,7 @@ import { getCallGenerateService, handleGenerateRequest } from "./services/call-g
 // ⭐ 条件导入RAG子系统
 let ragSystem = null;
 
-const EXT_ID = "CharacterEngine";
+const EXT_ID = "CharaEngineForST";
 const EXT_NAME = "角色引擎";
 const extensionFolderPath = `scripts/extensions/third-party/${EXT_ID}`;
 
