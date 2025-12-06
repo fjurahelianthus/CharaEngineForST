@@ -8,6 +8,12 @@ import {
 } from "../integration/card-storage.js";
 import { buildNormalizedEntities } from "../core/entities.js";
 import { getUserName, getUserPersonaDescription } from "../integration/st-context.js";
+import { showExportDialog, showImportDialog } from "./editor/utils/import-export.js";
+import {
+  initJsonEditorPanel,
+  renderJsonEditor,
+  collectJsonConfig
+} from "./editor/panels/json-editor.js";
 
 // 核心模块
 import {
@@ -167,6 +173,63 @@ export function openCeEditorPanel() {
 }
 
 /**
+ * 处理导出按钮点击
+ */
+function handleExport() {
+  const config = collectConfigFromUi();
+  const characterName = getCurrentCharacterName() || "未命名角色";
+  showExportDialog(config, characterName);
+}
+
+/**
+ * 处理导入按钮点击
+ */
+function handleImport() {
+  showImportDialog((importedConfig) => {
+    // 导入成功后，刷新所有面板
+    if (!editorRoot) return;
+    
+    // 更新 lastLoadedInitialState
+    lastLoadedInitialState = importedConfig.initialState || {};
+    
+    // 渲染所有面板
+    const paramPanel = editorRoot.querySelector('[data-tab-panel="parameters"]');
+    const typePanel = editorRoot.querySelector('[data-tab-panel="promptTypes"]');
+    const entitiesPanel = editorRoot.querySelector('[data-tab-panel="entities"]');
+    const initialParamsPanel = editorRoot.querySelector('[data-tab-panel="initialParams"]');
+    const promptsPanel = editorRoot.querySelector('[data-tab-panel="prompts"]');
+    const optionsPanel = editorRoot.querySelector('[data-tab-panel="options"]');
+    
+    if (paramPanel) renderParameters(paramPanel, importedConfig.parameters || []);
+    if (typePanel) renderPromptTypes(typePanel, importedConfig.promptTypes || []);
+    if (entitiesPanel) renderEntities(entitiesPanel, importedConfig.entities || []);
+    if (initialParamsPanel) {
+      renderInitialParams(initialParamsPanel, importedConfig, () => {
+        return paramPanel ? collectParameters(paramPanel) : [];
+      });
+    }
+    if (promptsPanel) {
+      renderPrompts(
+        promptsPanel,
+        importedConfig.prompts || [],
+        importedConfig.promptTypes || [],
+        () => {
+          return paramPanel ? collectParameters(paramPanel) : [];
+        },
+        getExistingEntityNames
+      );
+    }
+    if (optionsPanel) renderOptions(optionsPanel, importedConfig.options || {});
+    
+    // 更新状态消息
+    setModalStatusMessage(editorRoot, "配置已导入，请检查并保存到角色卡", "success");
+    
+    // 触发自动保存（标记为手动操作）
+    scheduleAutoSave(editorRoot);
+  });
+}
+
+/**
  * 初始化所有面板
  * @param {HTMLElement} root
  */
@@ -177,6 +240,7 @@ function initAllPanels(root) {
   const initialParamsPanel = root.querySelector('[data-tab-panel="initialParams"]');
   const promptsPanel = root.querySelector('[data-tab-panel="prompts"]');
   const optionsPanel = root.querySelector('[data-tab-panel="options"]');
+  const jsonEditorPanel = root.querySelector('[data-tab-panel="jsonEditor"]');
 
   if (paramPanel) initParametersPanel(paramPanel);
   if (typePanel) initPromptTypesPanel(typePanel);
@@ -184,6 +248,7 @@ function initAllPanels(root) {
   if (initialParamsPanel) initInitialParamsPanel(initialParamsPanel);
   if (promptsPanel) initPromptsPanel(promptsPanel);
   if (optionsPanel) initOptionsPanel(optionsPanel);
+  if (jsonEditorPanel) initJsonEditorPanel(jsonEditorPanel);
 
   // 绑定全局事件
   wireGlobalEvents(root);
@@ -214,19 +279,38 @@ function wireGlobalEvents(root) {
       
       switchTab(root, tab, collectConfigFromUi, () => {
         const cfg = collectConfigFromUi();
-        const panel = root.querySelector('[data-tab-panel="initialParams"]');
-        if (panel) {
-          renderInitialParams(panel, cfg, () => {
-            const paramPanel = root.querySelector('[data-tab-panel="parameters"]');
-            return paramPanel ? collectParameters(paramPanel) : [];
-          });
+        
+        // 切换到初始参数面板时刷新
+        if (tab === "initialParams") {
+          const panel = root.querySelector('[data-tab-panel="initialParams"]');
+          if (panel) {
+            renderInitialParams(panel, cfg, () => {
+              const paramPanel = root.querySelector('[data-tab-panel="parameters"]');
+              return paramPanel ? collectParameters(paramPanel) : [];
+            });
+          }
+        }
+        
+        // 切换到JSON编辑器时，从表单同步数据
+        if (tab === "jsonEditor") {
+          const jsonPanel = root.querySelector('[data-tab-panel="jsonEditor"]');
+          if (jsonPanel) {
+            renderJsonEditor(jsonPanel, cfg);
+          }
         }
       });
     });
   });
 
-  // 绑定底部按钮事件，传入保存函数
-  wireFooterEvents(root, (isManual) => runAutoSave(isManual), () => hideModal(root), saveBeforeClose);
+  // 绑定底部按钮事件，传入保存函数和导出/导入处理函数
+  wireFooterEvents(
+    root,
+    (isManual) => runAutoSave(isManual),
+    () => hideModal(root),
+    saveBeforeClose,
+    handleExport,
+    handleImport
+  );
 
   // 内容变更触发自动保存
   root.addEventListener("input", (ev) => {
@@ -243,7 +327,11 @@ function wireGlobalEvents(root) {
       updatePromptOwnerSelects(root);
     }
     
-    scheduleAutoSave(target);
+    // JSON编辑器不触发自动保存（需要手动同步）
+    const jsonEditorPanel = target.closest('[data-tab-panel="jsonEditor"]');
+    if (!jsonEditorPanel) {
+      scheduleAutoSave(target);
+    }
   });
 
   root.addEventListener("change", (ev) => {
@@ -257,8 +345,63 @@ function wireGlobalEvents(root) {
       updatePromptOwnerSelects(root);
     }
     
-    scheduleAutoSave(target);
+    // JSON编辑器不触发自动保存（需要手动同步）
+    const jsonEditorPanel = target.closest('[data-tab-panel="jsonEditor"]');
+    if (!jsonEditorPanel) {
+      scheduleAutoSave(target);
+    }
   });
+
+  // 监听JSON编辑器的自定义事件
+  const jsonPanel = root.querySelector('[data-tab-panel="jsonEditor"]');
+  if (jsonPanel) {
+    // 从表单同步到JSON
+    jsonPanel.addEventListener("ce-json-sync-from-form", () => {
+      const cfg = collectConfigFromUi();
+      renderJsonEditor(jsonPanel, cfg);
+    });
+
+    // 从JSON同步到表单
+    jsonPanel.addEventListener("ce-json-sync-to-form", (e) => {
+      const config = e.detail?.config;
+      if (!config) return;
+
+      // 更新 lastLoadedInitialState
+      lastLoadedInitialState = config.initialState || {};
+
+      // 渲染所有面板
+      const paramPanel = root.querySelector('[data-tab-panel="parameters"]');
+      const typePanel = root.querySelector('[data-tab-panel="promptTypes"]');
+      const entitiesPanel = root.querySelector('[data-tab-panel="entities"]');
+      const initialParamsPanel = root.querySelector('[data-tab-panel="initialParams"]');
+      const promptsPanel = root.querySelector('[data-tab-panel="prompts"]');
+      const optionsPanel = root.querySelector('[data-tab-panel="options"]');
+
+      if (paramPanel) renderParameters(paramPanel, config.parameters || []);
+      if (typePanel) renderPromptTypes(typePanel, config.promptTypes || []);
+      if (entitiesPanel) renderEntities(entitiesPanel, config.entities || []);
+      if (initialParamsPanel) {
+        renderInitialParams(initialParamsPanel, config, () => {
+          return paramPanel ? collectParameters(paramPanel) : [];
+        });
+      }
+      if (promptsPanel) {
+        renderPrompts(
+          promptsPanel,
+          config.prompts || [],
+          config.promptTypes || [],
+          () => {
+            return paramPanel ? collectParameters(paramPanel) : [];
+          },
+          getExistingEntityNames
+        );
+      }
+      if (optionsPanel) renderOptions(optionsPanel, config.options || {});
+
+      // 触发自动保存
+      scheduleAutoSave(root);
+    });
+  }
 }
 
 /**
@@ -380,6 +523,7 @@ function refreshEditorFromCurrentCard() {
   const initialParamsPanel = editorRoot.querySelector('[data-tab-panel="initialParams"]');
   const promptsPanel = editorRoot.querySelector('[data-tab-panel="prompts"]');
   const optionsPanel = editorRoot.querySelector('[data-tab-panel="options"]');
+  const jsonEditorPanel = editorRoot.querySelector('[data-tab-panel="jsonEditor"]');
 
   if (paramPanel) renderParameters(paramPanel, cfg.parameters || []);
   if (typePanel) renderPromptTypes(typePanel, cfg.promptTypes || []);
@@ -401,6 +545,7 @@ function refreshEditorFromCurrentCard() {
     );
   }
   if (optionsPanel) renderOptions(optionsPanel, cfg.options || {});
+  if (jsonEditorPanel) renderJsonEditor(jsonEditorPanel, cfg);
 
   // 更新保存基线
   try {

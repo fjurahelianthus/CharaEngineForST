@@ -167,11 +167,13 @@ function parseLocationCastIntentBlock(locationCastBlock) {
   const setCurrentMatch = locationCastBlock.match(/<setCurrent>([\s\S]*?)<\/setCurrent>/i);
   if (setCurrentMatch) {
     const content = setCurrentMatch[1].trim();
-    // 支持两种格式：
+    // 支持三种格式：
     // 1. 直接文本：学园屋顶
     // 2. 带标记：- 地点：学园屋顶
+    // 3. 完整路径：京都大学.图书馆
     const locationMatch = content.match(/(?:地点[：:]\s*)?([^\n（(]+)/);
     if (locationMatch) {
+      // 保留完整路径，包括点号分隔符
       locationCastIntent.setCurrent = locationMatch[1].trim();
     }
   }
@@ -192,7 +194,7 @@ function parseLocationCastIntentBlock(locationCastBlock) {
 }
 
 /**
- * 解析地点名称列表（支持多种格式）
+ * 解析地点名称列表（支持多种格式，包括完整路径）
  * @param {string} text - 包含地点名称的文本
  * @returns {string[]}
  */
@@ -210,15 +212,17 @@ function parseLocationNames(text) {
     // 支持多种格式：
     // - 地点：学园屋顶
     // - 学园屋顶
+    // - 京都大学.图书馆（完整路径）
     // 学园屋顶
     let locationName = null;
     
     if (trimmed.startsWith('-')) {
       const match = trimmed.match(/地点[：:]\s*([^\n（(]+)/);
       if (match) {
+        // 保留完整路径，包括点号分隔符
         locationName = match[1].trim();
       } else {
-        // 简单格式：- 学园屋顶
+        // 简单格式：- 学园屋顶 或 - 京都大学.图书馆
         locationName = trimmed.substring(1).trim();
       }
     } else {

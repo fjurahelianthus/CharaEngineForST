@@ -213,16 +213,34 @@ ${paramLines.join("\n\n")}`
     ? `当前参数状态：\n${currentValuesLines.join('\n')}`
     : "";
   
-  // P0.2: 场景状态
+  // P0.2: 场景状态（包括地点Cast）
   let sceneStateBlock = "";
-  if (useSceneAndCast && currentState && currentState.scene) {
-    const locationHint = currentState.scene.locationHint || "未设置";
-    const sceneTags = Array.isArray(currentState.scene.sceneTags) && currentState.scene.sceneTags.length > 0
-      ? currentState.scene.sceneTags.map(t => `"${t}"`).join(', ')
-      : "无";
-    sceneStateBlock = `当前场景状态：
-  - 地点：${locationHint}
-  - 场景标签：[${sceneTags}]`;
+  if (useSceneAndCast && currentState) {
+    const sceneLines = [];
+    
+    // 场景元数据
+    if (currentState.scene) {
+      const locationHint = currentState.scene.locationHint || "未设置";
+      const sceneTags = Array.isArray(currentState.scene.sceneTags) && currentState.scene.sceneTags.length > 0
+        ? currentState.scene.sceneTags.map(t => `"${t}"`).join(', ')
+        : "无";
+      sceneLines.push(`  - 地点提示：${locationHint}`);
+      sceneLines.push(`  - 场景标签：[${sceneTags}]`);
+    }
+    
+    // 地点Cast状态
+    if (currentState.locationCast) {
+      const currentLoc = currentState.locationCast.current || "未设置";
+      const candidateLocs = Array.isArray(currentState.locationCast.candidate) && currentState.locationCast.candidate.length > 0
+        ? currentState.locationCast.candidate.join(', ')
+        : "无";
+      sceneLines.push(`  - 当前地点：${currentLoc}`);
+      sceneLines.push(`  - 候选地点：${candidateLocs}`);
+    }
+    
+    if (sceneLines.length > 0) {
+      sceneStateBlock = `当前场景状态：\n${sceneLines.join('\n')}`;
+    }
   }
   
   // P0.3: Cast 状态
@@ -256,9 +274,15 @@ ${paramLines.join("\n\n")}`
   }
   
   if (locationEntities.length > 0) {
-    entityLines.push("地点实体：");
+    entityLines.push("地点实体（优先使用完整路径名）：");
     for (const e of locationEntities) {
-      entityLines.push(`  - ${e.name}`);
+      const parentLocation = e.parentLocation || "";
+      if (parentLocation) {
+        // 显示完整路径格式
+        entityLines.push(`  - ${parentLocation}.${e.name} (或简写: ${e.name})`);
+      } else {
+        entityLines.push(`  - ${e.name}`);
+      }
     }
   }
   
@@ -441,6 +465,18 @@ ${paramLinesWithPhases.join("\n\n")}`
     - 简要分析场景或进出场的变化
   </Analysis>
 
+  <LocationCastIntent>
+    <setCurrent>
+      - 地点：{地点名或完整路径，如"京都大学.图书馆"}
+    </setCurrent>
+    <addCandidate>
+      - 地点：{候选地点名}
+    </addCandidate>
+    <removeCandidate>
+      - 地点：{移除的候选地点名}
+    </removeCandidate>
+  </LocationCastIntent>
+
   <CastIntent>
     <enter>
       - 角色：{进场实体名}（可选说明）
@@ -459,6 +495,8 @@ ${paramLinesWithPhases.join("\n\n")}`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【Cast 分层说明】
+
+## 角色Cast（三层结构）
 
 角色在场景中分为三个层级，决定了提示注入的详细程度：
 
@@ -485,7 +523,27 @@ ${paramLinesWithPhases.join("\n\n")}`
 - 主要对话角色 → focus
 - 在场但不主要发言 → presentSupporting
 - 不在场但可能被提及 → offstageRelated
-- 如果不指定 preferredLayer，系统会默认尝试加入 focus 层`);
+- 如果不指定 preferredLayer，系统会默认尝试加入 focus 层
+
+## 地点Cast（两层结构）
+
+地点分为两个层级：
+
+1. **current（当前地点）**
+   - 完整 baseinfo 和 advanceinfo
+   - 只能有一个当前地点
+   - **优先使用完整路径名**，如"京都大学.图书馆"而非仅"图书馆"
+   - 完整路径能更清晰地表达地点的层级关系
+
+2. **candidate（候选地点）**
+   - 仅名称 + 简短提示（candidateHint）
+   - 可以有多个候选地点
+   - 同样**优先使用完整路径名**
+
+**地点命名规范：**
+- ✅ 推荐：使用完整路径 "父地点.子地点"，如"京都大学.图书馆"、"东京.涩谷区.咖啡厅"
+- ⚠️ 可接受：单独地点名，如"图书馆"（仅当该地点无父级或上下文明确时）
+- 完整路径能避免地点混淆，提高模型理解准确度`);
   }
 
   // 世界观检索示例

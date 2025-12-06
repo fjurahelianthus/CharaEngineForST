@@ -44,6 +44,7 @@ export function createModalDOM() {
         <button class="ce-tab-btn" data-tab="prompts">提示条目</button>
         <button class="ce-tab-btn" data-tab="initialParams">初始参数</button>
         <button class="ce-tab-btn" data-tab="options">角色卡选项</button>
+        <button class="ce-tab-btn" data-tab="jsonEditor">JSON编辑器</button>
       </div>
       <div class="ce-modal-body">
         <div class="ce-tab-panel" data-tab-panel="parameters"></div>
@@ -52,11 +53,20 @@ export function createModalDOM() {
         <div class="ce-tab-panel" data-tab-panel="prompts" style="display:none;"></div>
         <div class="ce-tab-panel" data-tab-panel="initialParams" style="display:none;"></div>
         <div class="ce-tab-panel" data-tab-panel="options" style="display:none;"></div>
+        <div class="ce-tab-panel" data-tab-panel="jsonEditor" style="display:none;"></div>
       </div>
       <div class="ce-modal-footer">
         <div class="ce-modal-message ce-small-hint" data-ce-message></div>
         <div class="ce-modal-footer-buttons">
-          <button class="ce-btn" data-action="save">保存到当前角色卡</button>
+          <button class="ce-btn ce-btn-secondary" data-action="export" title="导出当前配置到文件">
+            <i class="fa-solid fa-download"></i> 导出
+          </button>
+          <button class="ce-btn ce-btn-secondary" data-action="import" title="从文件导入配置">
+            <i class="fa-solid fa-upload"></i> 导入
+          </button>
+          <button class="ce-btn ce-btn-secondary" data-action="save">
+            <i class="fa-solid fa-save"></i> 保存到当前角色卡
+          </button>
           <button class="ce-btn ce-btn-secondary" data-action="cancel">关闭</button>
         </div>
       </div>
@@ -416,24 +426,35 @@ export function restoreSidebarMode(root) {
  * @param {Function} saveFn - 保存函数
  * @param {Function} closeFn - 关闭函数
  * @param {Function} [saveBeforeCloseFn] - 关闭前保存的函数（可选）
+ * @param {Function} [exportFn] - 导出函数（可选）
+ * @param {Function} [importFn] - 导入函数（可选）
  */
-export function wireFooterEvents(root, saveFn, closeFn, saveBeforeCloseFn) {
+export function wireFooterEvents(root, saveFn, closeFn, saveBeforeCloseFn, exportFn, importFn) {
   const footer = root.querySelector(".ce-modal-footer");
-  if (footer) {
-    footer.addEventListener("click", async (ev) => {
-      const target = ev.target;
-      if (!(target instanceof HTMLElement)) return;
-      const action = target.dataset.action;
-      if (!action) return;
+  if (!footer) return;
+  
+  footer.addEventListener("click", async (ev) => {
+    const target = ev.target;
+    if (!(target instanceof HTMLElement)) return;
+    
+    // 查找实际的按钮元素（可能点击了图标）
+    const button = target.closest('[data-action]');
+    if (!button) return;
+    
+    const action = button.dataset.action;
+    if (!action) return;
 
-      if (action === "save") {
-        await saveFn(true);
-      } else if (action === "cancel") {
-        if (saveBeforeCloseFn) {
-          await saveBeforeCloseFn();
-        }
-        closeFn();
+    if (action === "save") {
+      await saveFn(true);
+    } else if (action === "cancel") {
+      if (saveBeforeCloseFn) {
+        await saveBeforeCloseFn();
       }
-    });
-  }
+      closeFn();
+    } else if (action === "export" && exportFn) {
+      exportFn();
+    } else if (action === "import" && importFn) {
+      importFn();
+    }
+  });
 }

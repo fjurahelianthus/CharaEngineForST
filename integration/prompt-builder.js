@@ -360,12 +360,19 @@ export async function buildPromptInjectionBlock(engineState) {
     const baseinfo = ent?.baseinfo || "";
     const parentLocation = ent?.parentLocation || "";
 
+    // 构建完整路径名（如果有父地点）
+    let fullLocationPath = effectiveCurrentLocation;
+    if (parentLocation && !effectiveCurrentLocation.includes('.')) {
+      // 如果当前地点名不包含点号，且有父地点，则构建完整路径
+      fullLocationPath = `${parentLocation}.${effectiveCurrentLocation}`;
+    }
+
     lines.push("<Location_Current>");
-    lines.push(`  location: ${effectiveCurrentLocation}`);
+    lines.push(`  location: ${fullLocationPath}`);
     lines.push(`  layer: current`);
     
-    // 注入父地点信息（如果存在）
-    if (parentLocation) {
+    // 注入父地点信息（如果存在且未在路径中体现）
+    if (parentLocation && !effectiveCurrentLocation.includes('.')) {
       lines.push(`  parent_location: ${parentLocation}`);
     }
     
@@ -398,17 +405,21 @@ export async function buildPromptInjectionBlock(engineState) {
         const hint = ent.candidateHint || "";
         const parentLocation = ent.parentLocation || "";
         
-        // 构建候选地点条目
-        let candidateEntry = `  - ${name}`;
-        if (parentLocation) {
-          candidateEntry += ` (位于: ${parentLocation})`;
+        // 构建完整路径名（优先显示）
+        let displayName = name;
+        if (parentLocation && !name.includes('.')) {
+          // 如果候选地点名不包含点号，且有父地点，则构建完整路径
+          displayName = `${parentLocation}.${name}`;
         }
+        
+        // 构建候选地点条目
+        let candidateEntry = `  - ${displayName}`;
         if (hint) {
           candidateEntry += `: ${hint}`;
         }
         lines.push(candidateEntry);
       } else {
-        // 未知地点：仅名称
+        // 未知地点：仅名称（可能已经是完整路径）
         lines.push(`  - ${name}`);
       }
     }
