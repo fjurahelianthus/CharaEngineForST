@@ -794,17 +794,52 @@ export async function callParseModel(parseInput) {
     // eslint-disable-next-line no-console
     console.debug("[CharacterEngine] 最终API配置:", apiConfig);
 
+    // 根据设置构建 components.list
+    const componentsList = [];
+    
+    if (parseApiSettings.usePresetPrompts) {
+      // 启用预设提示词基座
+      componentsList.push('ALL_PREON');
+      
+      // 禁用不需要的组件（对话历史、角色描述、人设描述）
+      componentsList.push({
+        'chatHistory': { disable: true }
+      });
+      componentsList.push({
+        'charDescription': { disable: true }
+      });
+      componentsList.push({
+        'personaDescription': { disable: true }
+      });
+      
+      // 根据设置决定是否禁用世界书
+      if (!parseApiSettings.injectWorldInfo) {
+        componentsList.push({
+          'worldInfoBefore': { disable: true }
+        });
+        componentsList.push({
+          'worldInfoAfter': { disable: true }
+        });
+      }
+      
+      // eslint-disable-next-line no-console
+      console.debug("[CharacterEngine] 解析模型使用预设提示词", {
+        usePresetPrompts: true,
+        injectWorldInfo: parseApiSettings.injectWorldInfo
+      });
+    }
+    
+    // 添加解析提示词（始终在最前面）
+    componentsList.push({
+      role: 'system',
+      content: parseInput.quietPrompt,
+      position: 'BEFORE_PROMPT'
+    });
+    
     // 构造 callGenerate 选项
     const options = {
       components: {
-        list: [
-          // 纯净的解析提示，不继承任何组件
-          {
-            role: 'system',
-            content: parseInput.quietPrompt,
-            position: 'BEFORE_PROMPT'
-          }
-        ]
+        list: componentsList
       },
       userInput: '请分析上文内容',
       streaming: {

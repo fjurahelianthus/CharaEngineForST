@@ -90,6 +90,11 @@ function wireSettingsForm(container) {
   const openEditorBtn = container.querySelector("#ce_open_editor");
   const openStateObserverBtn = container.querySelector("#ce_open_state_observer");
   const openParseApiSettingsBtn = container.querySelector("#ce_open_parse_api_settings");
+  
+  // 新增：API调用延迟和预设提示词配置
+  const parseCallDelayInput = container.querySelector("#ce_parse_call_delay");
+  const parseUsePresetPromptsCheckbox = container.querySelector("#ce_parse_use_preset_prompts");
+  const parseInjectWorldInfoCheckbox = container.querySelector("#ce_parse_inject_world_info");
 
   if (enableCheckbox) {
     enableCheckbox.checked = !!settings.enabled;
@@ -101,9 +106,90 @@ function wireSettingsForm(container) {
   }
 
   if (earlyParseCheckbox) {
-    earlyParseCheckbox.checked = settings.useEarlyParse !== false;
-    earlyParseCheckbox.addEventListener("change", () => {
-      settings.useEarlyParse = earlyParseCheckbox.checked;
+    // 强制启用提前解析，不允许用户更改
+    earlyParseCheckbox.checked = true;
+    earlyParseCheckbox.disabled = true;
+    settings.useEarlyParse = true;
+    
+    // 添加视觉提示
+    const label = earlyParseCheckbox.parentElement;
+    if (label) {
+      label.style.opacity = '0.6';
+      label.title = '提前解析模式已强制启用（必需功能）';
+    }
+    
+    // 不添加 change 事件监听器，因为已禁用
+  }
+
+  // API调用延迟设置
+  if (parseCallDelayInput) {
+    // 初始化parseApiSettings（如果不存在）
+    if (!settings.parseApiSettings) {
+      settings.parseApiSettings = {
+        useCustomApi: false,
+        apiConnection: {},
+        parameters: {},
+        callDelay: 5,
+        usePresetPrompts: false,
+        injectWorldInfo: false
+      };
+    }
+    
+    parseCallDelayInput.value = settings.parseApiSettings.callDelay ?? 5;
+    parseCallDelayInput.addEventListener("change", () => {
+      const value = parseInt(parseCallDelayInput.value) || 5;
+      settings.parseApiSettings.callDelay = Math.max(0, Math.min(60, value));
+      parseCallDelayInput.value = settings.parseApiSettings.callDelay;
+      saveSettingsDebounced();
+    });
+  }
+
+  // 预设提示词配置
+  if (parseUsePresetPromptsCheckbox) {
+    parseUsePresetPromptsCheckbox.checked = settings.parseApiSettings?.usePresetPrompts ?? false;
+    parseUsePresetPromptsCheckbox.addEventListener("change", () => {
+      if (!settings.parseApiSettings) {
+        settings.parseApiSettings = {
+          useCustomApi: false,
+          apiConnection: {},
+          parameters: {},
+          callDelay: 5,
+          usePresetPrompts: false,
+          injectWorldInfo: false
+        };
+      }
+      settings.parseApiSettings.usePresetPrompts = parseUsePresetPromptsCheckbox.checked;
+      
+      // 联动：禁用/启用世界书注入选项
+      if (parseInjectWorldInfoCheckbox) {
+        parseInjectWorldInfoCheckbox.disabled = !parseUsePresetPromptsCheckbox.checked;
+        if (!parseUsePresetPromptsCheckbox.checked) {
+          parseInjectWorldInfoCheckbox.checked = false;
+          settings.parseApiSettings.injectWorldInfo = false;
+        }
+      }
+      
+      saveSettingsDebounced();
+    });
+  }
+
+  // 世界书注入配置
+  if (parseInjectWorldInfoCheckbox) {
+    parseInjectWorldInfoCheckbox.checked = settings.parseApiSettings?.injectWorldInfo ?? false;
+    parseInjectWorldInfoCheckbox.disabled = !(settings.parseApiSettings?.usePresetPrompts ?? false);
+    
+    parseInjectWorldInfoCheckbox.addEventListener("change", () => {
+      if (!settings.parseApiSettings) {
+        settings.parseApiSettings = {
+          useCustomApi: false,
+          apiConnection: {},
+          parameters: {},
+          callDelay: 5,
+          usePresetPrompts: false,
+          injectWorldInfo: false
+        };
+      }
+      settings.parseApiSettings.injectWorldInfo = parseInjectWorldInfoCheckbox.checked;
       saveSettingsDebounced();
     });
   }

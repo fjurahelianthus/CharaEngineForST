@@ -24,7 +24,8 @@ const DEFAULT_SETTINGS = {
     frequencyPenalty: { enabled: false, value: 0 },
     presencePenalty: { enabled: false, value: 0 },
     repetitionPenalty: { enabled: false, value: 1.0 }
-  }
+  },
+  // callDelay, usePresetPrompts, injectWorldInfo 已移至主界面设置
 };
 
 /**
@@ -45,12 +46,22 @@ export function openParseApiSettings() {
       </div>
       <div class="ce-modal-body">
         <div class="ce-parse-api-settings">
-          <!-- 模式选择 -->
-          <div class="ce-setting-section">
-            <div class="ce-setting-description">
-              <p>解析模型用于分析对话内容并生成状态更新指令。你可以选择使用当前的API设置，或为解析模型单独配置。</p>
-            </div>
+        
+        <!-- 说明文字 -->
+        <div class="ce-setting-section">
+          <div class="ce-setting-description">
+            <p><strong>注意：</strong>API调用延迟和预设提示词配置已移至主界面的"对话逻辑"部分，方便快速修改。</p>
+            <p>此处仅配置解析模型的API连接和采样参数。</p>
           </div>
+        </div>
+
+        <!-- 模式选择 -->
+        <div class="ce-setting-section">
+          <h4>API 配置模式</h4>
+          <div class="ce-setting-description">
+            <p>解析模型用于分析对话内容并生成状态更新指令。你可以选择使用当前的API设置，或为解析模型单独配置。</p>
+          </div>
+        </div>
 
           <div class="ce-setting-section">
             <div class="ce-radio-group">

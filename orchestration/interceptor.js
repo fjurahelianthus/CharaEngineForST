@@ -109,6 +109,15 @@ export async function ceGenerateInterceptor(chat, contextSize, abort, type) {
         // 立即存储到 changeSetsByIndex
         await setChangeSetForIndex(targetIndex, parseChangeSet);
         logDebug(`ChangeSet 已存储到索引 ${targetIndex}`);
+        
+        // 应用API调用延迟
+        const parseApiSettings = settings.parseApiSettings || {};
+        const delaySeconds = parseApiSettings.callDelay ?? 5;
+        if (delaySeconds > 0) {
+          logDebug(`应用API调用延迟: ${delaySeconds}秒`);
+          await new Promise(resolve => setTimeout(resolve, delaySeconds * 1000));
+          logDebug(`延迟完成，继续主对话调用`);
+        }
       }
     } else if (parseChangeSet) {
       logDebug(`复用已存储的 ChangeSet（索引 ${targetIndex}）`);
